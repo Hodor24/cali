@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:id="@+id/row_copy"
+        android:title="@string/chat_row_copy" />
+    <item
+        android:id="@+id/row_edit"
+        android:title="@string/chat_row_edit" />
+    <item
+        android:id="@+id/row_delete"
+        android:title="@string/chat_row_delete" />
+</menu>

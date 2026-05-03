@@ -16,69 +16,111 @@
         android:elevation="4dp"
         app:menu="@menu/ai_chat_menu"
         app:navigationIcon="@drawable/ic_arrow_back_24"
-        app:title="@string/ai_chat_title"
-        app:titleTextColor="?attr/colorOnPrimary" />
+        app:title="@string/cali_title"
+        app:subtitle="@string/cali_subtitle"
+        app:titleTextColor="?attr/colorOnPrimary"
+        app:subtitleTextColor="?attr/colorOnPrimary" />
 
-    <LinearLayout
+    <com.google.android.material.card.MaterialCardView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:gravity="end"
-        android:orientation="horizontal"
-        android:paddingHorizontal="8dp"
-        android:paddingTop="4dp">
+        android:layout_marginHorizontal="12dp"
+        android:layout_marginTop="10dp"
+        app:cardCornerRadius="16dp"
+        app:cardElevation="4dp"
+        app:strokeColor="?attr/colorOutlineVariant"
+        app:strokeWidth="0dp">
 
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/btnAiHelp"
-            style="@style/Widget.Material3.Button.TextButton"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/ai_how_to_connect" />
-
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/btnAiApiSettings"
-            style="@style/Widget.Material3.Button.TextButton"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/ai_open_settings_short" />
-    </LinearLayout>
-
-    <com.google.android.material.textfield.TextInputLayout
-        android:id="@+id/subjectLayout"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:paddingHorizontal="16dp"
-        android:paddingTop="12dp"
-        android:hint="@string/ai_subject_hint">
-
-        <com.google.android.material.textfield.TextInputEditText
-            android:id="@+id/inputSubject"
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:inputType="textCapSentences|textMultiLine"
-            tools:text="Better pose estimation" />
-    </com.google.android.material.textfield.TextInputLayout>
+            android:background="@drawable/bg_cali_header"
+            android:orientation="vertical"
+            android:padding="16dp">
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/cali_tagline"
+                android:textAppearance="?attr/textAppearanceBodyMedium"
+                android:textColor="@color/cali_on_header" />
+
+            <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/subjectLayout"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:hint="@string/cali_subject_hint">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/inputSubject"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:inputType="textCapSentences|textMultiLine"
+                    tools:text="Thermal cameras on site" />
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:text="@string/cali_subject_note"
+                android:textAppearance="?attr/textAppearanceBodySmall"
+                android:textColor="@color/cali_on_header_muted" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
+
+                <com.google.android.material.materialswitch.MaterialSwitch
+                    android:id="@+id/switchSpeakReplies"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="@string/cali_speak_replies"
+                    android:textColor="@color/cali_on_header" />
+
+                <com.google.android.material.materialswitch.MaterialSwitch
+                    android:id="@+id/switchListenAfter"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="@string/cali_listen_after"
+                    android:textColor="@color/cali_on_header" />
+            </LinearLayout>
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:text="@string/cali_voice_note"
+                android:textAppearance="?attr/textAppearanceBodySmall"
+                android:textColor="@color/cali_on_header_muted" />
+        </LinearLayout>
+    </com.google.android.material.card.MaterialCardView>
+
+    <TextView
+        android:id="@+id/textConnectionBanner"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginHorizontal="16dp"
+        android:layout_marginTop="8dp"
+        android:background="?attr/colorErrorContainer"
+        android:padding="10dp"
+        android:textAppearance="?attr/textAppearanceBodySmall"
+        android:textColor="?attr/colorOnErrorContainer"
+        android:visibility="gone"
+        tools:text="Connection error sample"
+        tools:visibility="visible" />
 
     <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:paddingHorizontal="16dp"
-        android:paddingTop="4dp"
-        android:text="@string/ai_subject_note"
-        android:textAppearance="?attr/textAppearanceBodySmall" />
-
-    <TextView
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:paddingHorizontal="16dp"
-        android:paddingTop="4dp"
-        android:text="@string/ai_api_disclaimer"
-        android:textAppearance="?attr/textAppearanceBodySmall" />
-
-    <TextView
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:paddingHorizontal="16dp"
-        android:paddingTop="12dp"
+        android:paddingTop="10dp"
         android:text="@string/assistant_conversation_label"
         android:textAppearance="?attr/textAppearanceTitleSmall" />
 
@@ -122,12 +164,66 @@
                 android:text="@string/assistant_type_here"
                 android:textAppearance="?attr/textAppearanceTitleSmall" />
 
+            <HorizontalScrollView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:fillViewport="true"
+                android:scrollbars="none">
+
+                <com.google.android.material.chip.ChipGroup
+                    android:id="@+id/chipQuickPrompts"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    app:chipSpacingHorizontal="8dp"
+                    app:singleLine="true"
+                    app:singleSelection="false">
+
+                    <com.google.android.material.chip.Chip
+                        android:id="@+id/chipQuickSummarize"
+                        style="@style/Widget.Material3.Chip.Filter"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/cali_chip_summarize" />
+
+                    <com.google.android.material.chip.Chip
+                        android:id="@+id/chipQuickSteps"
+                        style="@style/Widget.Material3.Chip.Filter"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/cali_chip_steps" />
+
+                    <com.google.android.material.chip.Chip
+                        android:id="@+id/chipQuickExample"
+                        style="@style/Widget.Material3.Chip.Filter"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/cali_chip_example" />
+
+                    <com.google.android.material.chip.Chip
+                        android:id="@+id/chipQuickChecklist"
+                        style="@style/Widget.Material3.Chip.Filter"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/cali_chip_checklist" />
+                </com.google.android.material.chip.ChipGroup>
+            </HorizontalScrollView>
+
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="8dp"
                 android:gravity="center_vertical"
                 android:orientation="horizontal">
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnMic"
+                    style="@style/Widget.Material3.Button.IconButton.Filled.Tonal"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:contentDescription="@string/cali_mic_content_desc"
+                    app:icon="@drawable/ic_mic_24"
+                    app:iconTint="?attr/colorOnSecondaryContainer" />
 
                 <com.google.android.material.textfield.TextInputLayout
                     android:layout_width="0dp"

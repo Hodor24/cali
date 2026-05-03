@@ -3,4 +3,10 @@
     <color name="md_theme_primary">#0D47A1</color>
     <color name="md_theme_on_primary">#FFFFFF</color>
     <color name="surface">#F5F5F5</color>
+    <color name="cali_on_header">#FFFFFF</color>
+    <color name="cali_on_header_muted">#E0E0E0</color>
+    <color name="cali_chat_user_hi_bg">#FFEB3B</color>
+    <color name="cali_chat_user_hi_fg">#000000</color>
+    <color name="cali_chat_assistant_hi_bg">#E1F5FE</color>
+    <color name="cali_chat_assistant_hi_fg">#000000</color>
 </resources>

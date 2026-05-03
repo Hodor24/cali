@@ -2,11 +2,48 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto">
     <item
-        android:id="@+id/action_ai_help"
-        android:title="@string/ai_help_menu"
+        android:id="@+id/action_stop_generation"
+        android:title="@string/ai_stop_generating"
+        android:visible="false"
+        app:showAsAction="never" />
+    <item
+        android:id="@+id/action_stop_speaking"
+        android:title="@string/cali_stop_speaking"
+        app:showAsAction="never" />
+    <item
+        android:id="@+id/action_retry_last"
+        android:title="@string/ai_menu_retry"
+        app:showAsAction="never" />
+    <item
+        android:id="@+id/action_share_transcript"
+        android:title="@string/ai_share_transcript"
+        app:showAsAction="never" />
+    <item
+        android:id="@+id/action_copy_transcript"
+        android:title="@string/ai_copy_transcript"
+        app:showAsAction="never" />
+    <item
+        android:id="@+id/action_share_markdown"
+        android:title="@string/ai_share_markdown"
+        app:showAsAction="never" />
+    <item
+        android:id="@+id/action_regenerate_alt"
+        android:title="@string/ai_regenerate_alt"
+        app:showAsAction="never" />
+    <item
+        android:id="@+id/action_clear_chat"
+        android:title="@string/ai_clear_conversation"
+        app:showAsAction="never" />
+    <item
+        android:id="@+id/action_cali_options"
+        android:title="@string/cali_options_menu"
         app:showAsAction="never" />
     <item
         android:id="@+id/action_ai_settings"
         android:title="@string/ai_api_settings"
+        app:showAsAction="never" />
+    <item
+        android:id="@+id/action_ai_help"
+        android:title="@string/ai_help_menu"
         app:showAsAction="never" />
 </menu>
