@@ -9,7 +9,11 @@ Standalone repo (**not** the Candidateflow WhatsApp project). App id: `dev.tabml
 - **Train from scratch** — random weights, 8000 epochs on XOR, then saves `xor_checkpoint.json` in private storage.
 - **Continue training (from saved weights)** — 2000 more epochs starting from your file (still offline).
 - **Load saved weights & test XOR** — runs inference only; shows last saved loss and time if present.
-- **Delete saved weights** — removes the checkpoint after confirmation.
+- **Run TensorFlow Lite XOR** — loads `assets/models/xor_mlp.tflite` via **TensorFlow Lite** + **Lite Support** (bundled file). Regenerate with `python3 tools/export_xor_tflite.py` after `pip install tensorflow` if you change the export script.
+
+## TensorFlow Lite (real on-device runtime)
+
+Gradle deps: `org.tensorflow:tensorflow-lite`, `org.tensorflow:tensorflow-lite-support`. The XOR `.tflite` is **your artifact** from `tools/export_xor_tflite.py` (trains the same 2→16→1 idea in Python, then converts — not a downloaded checkpoint). Kotlin **Train from scratch** remains independent.
 
 ## Open in Android Studio
 

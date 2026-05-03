@@ -23,4 +23,8 @@
     <string name="log_start">Training XOR from random init (8000 epochs)…</string>
     <string name="log_done">Done. Outputs ~0, ~1, ~1, ~0 = learned XOR.</string>
     <string name="network_toast_on">Saved. This APK still has no INTERNET permission.</string>
+    <string name="tflite_hint">TensorFlow Lite runs the bundled assets/models/xor_mlp.tflite (exported by tools/export_xor_tflite.py). Inference only — separate from your Kotlin training.</string>
+    <string name="run_tflite_xor">Run TensorFlow Lite XOR (bundled .tflite)</string>
+    <string name="tflite_header">TensorFlow Lite (bundled model):</string>
+    <string name="tflite_fail">TFLite error: %1$s</string>
 </resources>

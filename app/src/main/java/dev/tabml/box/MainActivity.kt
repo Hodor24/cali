@@ -40,6 +40,7 @@ class MainActivity : AppCompatActivity() {
         binding.btnLoadSaved.setOnClickListener { loadSavedAndTest() }
         binding.btnContinueTrain.setOnClickListener { continueTrainingFromSaved() }
         binding.btnDeleteCheckpoint.setOnClickListener { confirmDeleteCheckpoint() }
+        binding.btnTfliteXor.setOnClickListener { runTfliteXor() }
         refreshCheckpointUi()
     }
 
@@ -55,6 +56,7 @@ class MainActivity : AppCompatActivity() {
         binding.btnLoadSaved.isEnabled = !locked && CheckpointStore.exists(this)
         binding.btnContinueTrain.isEnabled = !locked && CheckpointStore.exists(this)
         binding.btnDeleteCheckpoint.isEnabled = !locked && CheckpointStore.exists(this)
+        binding.btnTfliteXor.isEnabled = !locked
     }
 
     private fun saveCheckpoint(trainer: XorTrainer, finalLoss: Double) {
@@ -215,6 +217,45 @@ class MainActivity : AppCompatActivity() {
                 refreshCheckpointUi()
             }
             .show()
+    }
+
+    private fun runTfliteXor() {
+        setTrainingUiLocked(true)
+        log.clear()
+        lifecycleScope.launch(Dispatchers.Default) {
+            val lines: List<String> = try {
+                XorTfliteRunner(this@MainActivity).use { runner ->
+                    buildList {
+                        add(getString(R.string.tflite_header))
+                        val pts = listOf(
+                            0f to 0f,
+                            0f to 1f,
+                            1f to 0f,
+                            1f to 1f,
+                        )
+                        for ((a, b) in pts) {
+                            val y = runner.predict(a, b)
+                            add(
+                                String.format(
+                                    Locale.US,
+                                    "  f(%.0f,%.0f) = %.4f (expect XOR)",
+                                    a,
+                                    b,
+                                    y,
+                                ),
+                            )
+                        }
+                    }
+                }
+            } catch (e: Exception) {
+                listOf(getString(R.string.tflite_fail, e.message ?: e.toString()))
+            }
+            withContext(Dispatchers.Main) {
+                lines.forEach { appendLog(it) }
+                setTrainingUiLocked(false)
+                refreshCheckpointUi()
+            }
+        }
     }
 
     private fun appendLog(line: String) {

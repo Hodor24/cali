@@ -69,6 +69,21 @@
                 android:enabled="false"
                 android:text="@string/delete_checkpoint" />
 
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:text="@string/tflite_hint"
+                android:textAppearance="?attr/textAppearanceBodySmall" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnTfliteXor"
+                style="@style/Widget.Material3.Button.OutlinedButton"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:text="@string/run_tflite_xor" />
+
             <com.google.android.material.materialswitch.MaterialSwitch
                 android:id="@+id/switchNetwork"
                 android:layout_width="match_parent"
