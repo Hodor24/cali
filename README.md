@@ -42,7 +42,14 @@ Cali is already a “real” client: it sends **OpenAI-compatible** chat to **yo
 
 Other stacks work the same way if they implement **`POST {baseUrl}/v1/chat/completions`** (vLLM, LiteLLM, OpenAI, etc.). **Debug** APKs also allow `http://` base URLs (e.g. `http://10.0.0.5:11434`) if the tablet can reach the Mac on LAN—**release** builds do not.
 
-If you see **HTTP 403** with an **ngrok** URL: install the latest app build (adds `ngrok-skip-browser-warning` and a normal browser `User-Agent` for ngrok hosts). If it persists, open the same HTTPS URL once in **Chrome on the tablet**, tap **Visit site** if ngrok shows a warning, then try Cali again. In the ngrok local inspector ([http://127.0.0.1:4040](http://127.0.0.1:4040)) confirm requests reach **localhost:11434** and read the response body.
+If you see **HTTP 403** with an **ngrok** URL, the app already sends `ngrok-skip-browser-warning` and browser-like headers for ngrok hosts. A **403 with an empty body** often means the **public ngrok URL is stale** (old tunnel), **ngrok is not running**, or **ngrok’s edge** rejected the request before it reached your Mac — not an Ollama error. Checklist:
+
+1. On the Mac, `curl -sS http://127.0.0.1:11434/v1/tags` (or `/v1/models`) should return JSON while Ollama is running.
+2. Run **`ngrok http 11434`** (or `127.0.0.1:11434`) and set the app’s **Assistant base URL** to the **current** `https://…ngrok…` origin from that session (each new ngrok run can change the hostname on free tier).
+3. On the tablet, open that **same https origin** once in **Chrome**, tap **Visit site** if an interstitial appears, then try Cali again.
+4. On the Mac, open [http://127.0.0.1:4040](http://127.0.0.1:4040): if requests from the tablet **never appear**, the tunnel or URL is wrong; if they appear with 403, inspect response headers.
+
+Alternative tunnel (no ngrok): **`cloudflared tunnel --url http://127.0.0.1:11434`** — use the printed `https://…trycloudflare.com` origin as the base URL. **Debug** APKs can also use **`http://<laptop-LAN-ip>:11434`** if the tablet can reach the Mac on Wi‑Fi.
 
 ## Updating artifacts
 

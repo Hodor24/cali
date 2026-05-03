@@ -591,10 +591,18 @@ class AiChatActivity : AppCompatActivity() {
 
     private fun ngrokUpstreamHintIfNeeded(displayedError: String): String {
         val d = displayedError.lowercase()
-        if (!d.contains("ngrok") && !d.contains("8765") && !d.contains("err_ngrok")) {
-            return ""
+        val base = Prefs.aiBaseUrl(this).trim().lowercase()
+        val ngrokUrl = base.contains("ngrok") || d.contains("ngrok") || d.contains("err_ngrok")
+        val port8765 = d.contains("8765")
+        val forbidden = d.contains("403") || d.contains("forbidden")
+        val sb = StringBuilder()
+        if (forbidden && ngrokUrl) {
+            sb.append("\n\n").append(getString(R.string.ai_error_ngrok_403_hint))
         }
-        return "\n\n" + getString(R.string.ai_error_ngrok_upstream_hint)
+        if (ngrokUrl || port8765 || d.contains("err_ngrok")) {
+            sb.append("\n\n").append(getString(R.string.ai_error_ngrok_upstream_hint))
+        }
+        return sb.toString()
     }
 
     private fun refreshRetryShareMenu(sending: Boolean) {

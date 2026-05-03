@@ -41,6 +41,7 @@ class AssistantChatClient(
     private fun Request.Builder.applyNgrokFreeTierHeaders(url: String): Request.Builder {
         if (!url.contains("ngrok", ignoreCase = true)) return this
         addHeader("ngrok-skip-browser-warning", "true")
+        addHeader("Accept-Language", "en-US,en;q=0.9")
         // Default OkHttp User-Agent is sometimes blocked at the edge; mimic a normal client.
         addHeader(
             "User-Agent",
