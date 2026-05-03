@@ -23,6 +23,25 @@ The assistant can append a `###ACTION` block with `download_tflite` only for rea
 
 Dependencies: **OkHttp**, **androidx.security:security-crypto** for the optional bearer token.
 
+### Real LLM on your Mac (Ollama + ngrok)
+
+Cali is already a “real” client: it sends **OpenAI-compatible** chat to **your** server. The Python stub is optional for connectivity tests. To use an actual model:
+
+1. **Install [Ollama](https://ollama.com)** on the Mac and pull a model, e.g.  
+   `ollama pull llama3.2`
+2. **Leave Ollama running** (menu bar app). It exposes an OpenAI-compatible API on **`http://localhost:11434`** (`POST /v1/chat/completions`).
+3. **Tunnel HTTPS to the tablet** (release builds require **https://**):  
+   `ngrok http 11434`  
+   Copy the **https://…ngrok…** origin (no path).
+4. In **Tab ML Box** → Cali → **Your server settings**:
+   - **Assistant base URL** = that origin only, e.g. `https://abc123.ngrok-free.app`
+   - **Model name** = the Ollama model id, e.g. `llama3.2` (same as in `ollama list`)
+   - **Bearer token** = leave empty unless you added auth in front of Ollama
+   - On the main screen: **Allow HTTPS downloads** = **on**
+5. Turn **off** “Run LLM on this tablet” if you only want the remote Ollama path.
+
+Other stacks work the same way if they implement **`POST {baseUrl}/v1/chat/completions`** (vLLM, LiteLLM, OpenAI, etc.). **Debug** APKs also allow `http://` base URLs (e.g. `http://10.0.0.5:11434`) if the tablet can reach the Mac on LAN—**release** builds do not.
+
 ## Updating artifacts
 
 - **Model / graph:** download **`https://…/*.tflite`** or use **Install suggested .tflite** when your assistant reply includes one.
