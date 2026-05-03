@@ -4,6 +4,13 @@ Offline-first Android app for training a **tiny neural network from scratch** (X
 
 Standalone repo (**not** the Candidateflow WhatsApp project). App id: `dev.tabml.box`.
 
+## In the app
+
+- **Train from scratch** — random weights, 8000 epochs on XOR, then saves `xor_checkpoint.json` in private storage.
+- **Continue training (from saved weights)** — 2000 more epochs starting from your file (still offline).
+- **Load saved weights & test XOR** — runs inference only; shows last saved loss and time if present.
+- **Delete saved weights** — removes the checkpoint after confirmation.
+
 ## Open in Android Studio
 
 1. **File → Open** and choose this folder: `tab-ml-box`
