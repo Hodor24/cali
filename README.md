@@ -14,7 +14,16 @@ Standalone repo (**not** the Candidateflow WhatsApp project). App id: `dev.tabml
 
 Manifest: `INTERNET`, `ACCESS_NETWORK_STATE`, `REQUEST_INSTALL_PACKAGES`. **Cleartext HTTP is disabled** (`usesCleartextTraffic="false"`).
 
-## Updating “libs”
+## AI assistant (chat)
+
+Toolbar **chat icon** on the home screen opens **AI assistant** when **Allow HTTPS downloads** is on.
+
+- Set **Library or learning goal (subject)** so every message includes that context.
+- **API settings** (toolbar menu): OpenAI-compatible **base URL** (default `https://api.openai.com`), **model** name, and **API key** (stored with **EncryptedSharedPreferences**). Also works with many **self-hosted** compatible gateways over HTTPS.
+- The model answers in chat and can append a `###ACTION` JSON block with `download_tflite` when it has a **real** `https://` model URL (per instructions it must not invent links). **Install suggested .tflite** runs the same on-device install path as manual HTTPS download.
+- **Gradle libraries** cannot be merged into `build.gradle.kts` from the app at runtime; the assistant is instructed to output exact `implementation(...)` lines for you to paste in Android Studio.
+
+Dependencies: **OkHttp** for HTTPS JSON, **androidx.security:security-crypto** for the API key.
 
 - **Model / graph:** download a new **`https://…/*.tflite`** with *Download .tflite & use for inference*.
 - **Native TensorFlow Lite runtime:** ship updated `libtensorflowlite_jni.so` (etc.) inside a **new APK** you build; use *Download APK & open installer* to install that APK from a URL **you trust**.

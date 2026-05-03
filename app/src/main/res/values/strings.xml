@@ -17,12 +17,12 @@
     <string name="train_hint">Trains a tiny network on synthetic XOR data. No pretrained weights, no network.</string>
     <string name="output_log">Training log</string>
     <string name="allow_network">Allow HTTPS downloads</string>
-    <string name="network_note">When off, the app does not open network connections. Turning on allows only the download actions below (HTTPS only). Cleartext HTTP is disabled.</string>
+    <string name="network_note">When off, the app does not open network connections. Turning on allows HTTPS downloads, AI chat, and installs from URLs below (HTTPS only). Cleartext HTTP is disabled.</string>
     <string name="status_ready">Ready.</string>
     <string name="status_training">Training…</string>
     <string name="log_start">Training XOR from random init (8000 epochs)…</string>
     <string name="log_done">Done. Outputs ~0, ~1, ~1, ~0 = learned XOR.</string>
-    <string name="network_toast_on">HTTPS downloads enabled. Native TensorFlow Lite .so libraries still come from the installed APK — use “Download APK” to install a newer build that bundles updated native code.</string>
+    <string name="network_toast_on">HTTPS enabled: manual downloads, AI assistant, and APK installs. Native TF Lite .so still comes from the installed APK — use “Download APK” for a newer native build.</string>
     <string name="tflite_hint">TensorFlow Lite: bundled assets/models/xor_mlp.tflite unless you downloaded a replacement (HTTPS). Kotlin training is separate. Native JNI libs ship with the APK; update them by installing a newer APK you trust.</string>
     <string name="run_tflite_xor">Run TensorFlow Lite XOR (bundled .tflite)</string>
     <string name="tflite_header">TensorFlow Lite inference (downloaded .tflite if set, else bundled):</string>
@@ -39,4 +39,22 @@
     <string name="url_required">Enter an https:// URL first.</string>
     <string name="network_disabled_toast">Turn on “Allow HTTPS downloads” first.</string>
     <string name="install_unknown_sources_hint">Allow installs for this app, then try “Download APK” again.</string>
+    <string name="ai_chat_title">AI assistant</string>
+    <string name="ai_subject_hint">Library or learning goal (subject)</string>
+    <string name="ai_subject_note">Every message you send includes this subject so the assistant can search and recommend dependencies or model files.</string>
+    <string name="ai_message_hint">Message</string>
+    <string name="ai_send">Send</string>
+    <string name="ai_user_display_format">[%1$s]\n%2$s</string>
+    <string name="ai_install_suggested_tflite">Install suggested .tflite (HTTPS)</string>
+    <string name="ai_api_settings">API settings…</string>
+    <string name="ai_setting_base_url">OpenAI-compatible base URL</string>
+    <string name="ai_setting_model">Model name</string>
+    <string name="ai_setting_api_key">API key (stored encrypted on device)</string>
+    <string name="ai_save">Save</string>
+    <string name="ai_need_network">Turn on “Allow HTTPS downloads” on the main screen, then return here.</string>
+    <string name="ai_need_api_key">Set your API key in API settings (encrypted storage).</string>
+    <string name="ai_error">AI error: %1$s</string>
+    <string name="ai_install_done">Installed model (%1$d bytes). Run TensorFlow Lite on the main screen to test.</string>
+    <string name="ai_no_suggested_url">No suggested .tflite in the last reply.</string>
+    <string name="ai_api_disclaimer">Uses your HTTPS endpoint (OpenAI-compatible). Requests include your messages and subject. Gradle libraries cannot be auto-merged; the assistant gives lines to paste. .tflite install uses the same private download as manual HTTPS.</string>
 </resources>

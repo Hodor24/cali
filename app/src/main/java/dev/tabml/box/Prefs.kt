@@ -8,6 +8,8 @@ object Prefs {
     private const val KEY_ALLOW_NETWORK = "allow_network"
     private const val KEY_PREFER_DOWNLOADED_TFLITE = "prefer_downloaded_tflite"
     private const val KEY_LAST_HTTPS_URL = "last_https_url"
+    private const val KEY_AI_BASE_URL = "ai_base_url"
+    private const val KEY_AI_MODEL = "ai_model"
 
     fun allowNetwork(context: Context): Boolean =
         context.getSharedPreferences(NAME, Context.MODE_PRIVATE)
@@ -36,6 +38,28 @@ object Prefs {
     fun setLastHttpsUrl(context: Context, value: String) {
         context.getSharedPreferences(NAME, Context.MODE_PRIVATE).edit {
             putString(KEY_LAST_HTTPS_URL, value)
+        }
+    }
+
+    /** OpenAI-compatible API root, e.g. https://api.openai.com or your local https proxy. */
+    fun aiBaseUrl(context: Context): String =
+        context.getSharedPreferences(NAME, Context.MODE_PRIVATE)
+            .getString(KEY_AI_BASE_URL, "https://api.openai.com")
+            ?: "https://api.openai.com"
+
+    fun setAiBaseUrl(context: Context, value: String) {
+        context.getSharedPreferences(NAME, Context.MODE_PRIVATE).edit {
+            putString(KEY_AI_BASE_URL, value.trimEnd('/'))
+        }
+    }
+
+    fun aiModel(context: Context): String =
+        context.getSharedPreferences(NAME, Context.MODE_PRIVATE)
+            .getString(KEY_AI_MODEL, "gpt-4o-mini") ?: "gpt-4o-mini"
+
+    fun setAiModel(context: Context, value: String) {
+        context.getSharedPreferences(NAME, Context.MODE_PRIVATE).edit {
+            putString(KEY_AI_MODEL, value.trim())
         }
     }
 }

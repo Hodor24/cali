@@ -17,6 +17,10 @@
         android:theme="@style/Theme.TabMLBox"
         android:usesCleartextTraffic="false">
         <activity
+            android:name=".AiChatActivity"
+            android:exported="false"
+            android:windowSoftInputMode="adjustResize" />
+        <activity
             android:name=".MainActivity"
             android:exported="true"
             android:windowSoftInputMode="adjustResize">
