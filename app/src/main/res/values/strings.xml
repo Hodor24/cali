@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Tab ML Box</string>
+    <string name="train">Train from scratch</string>
+    <string name="train_hint">Trains a tiny network on synthetic XOR data. No pretrained weights, no network.</string>
+    <string name="output_log">Training log</string>
+    <string name="allow_network">Allow network (future use)</string>
+    <string name="network_note">This build has no INTERNET permission — Android cannot grant network access even if this is on. It remembers your choice for a future APK.</string>
+    <string name="status_ready">Ready.</string>
+    <string name="status_training">Training…</string>
+    <string name="log_start">Training XOR from random init (8000 epochs)…</string>
+    <string name="log_done">Done. Outputs ~0, ~1, ~1, ~0 = learned XOR.</string>
+    <string name="network_toast_on">Saved. This APK still has no INTERNET permission.</string>
+</resources>
