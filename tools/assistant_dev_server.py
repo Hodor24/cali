@@ -98,8 +98,10 @@ class Handler(BaseHTTPRequestHandler):
 
 
 def main() -> None:
-    host = "127.0.0.1"
-    print("HTTP dev server: http://%s:%d" % (host, PORT), file=sys.stderr)
+    # Bind all IPv4 interfaces so tunnels (ngrok/cloudflared) reliably reach the process.
+    # 127.0.0.1-only can fail if a tool resolves "localhost" differently (e.g. ::1).
+    host = "0.0.0.0"
+    print("HTTP dev server: http://127.0.0.1:%d (LAN: http://%s:%d)" % (PORT, host, PORT), file=sys.stderr)
     print("", file=sys.stderr)
     print("Tablet needs HTTPS. In another terminal run one of:", file=sys.stderr)
     print("  ngrok http %d" % PORT, file=sys.stderr)
