@@ -53,6 +53,9 @@ class AiChatActivity : AppCompatActivity() {
     /** Active send/generate job (on-device or remote); used to cancel on-device generation. */
     private var sendJob: Job? = null
 
+    /** Posted from [scheduleListenAfterIfNeeded]; removed when superseded or when leaving chat. */
+    private var listenAfterRunnable: Runnable? = null
+
     private val importGgufLauncher = registerForActivityResult(
         ActivityResultContracts.OpenDocument(),
     ) { uri: Uri? ->
@@ -220,6 +223,17 @@ class AiChatActivity : AppCompatActivity() {
         handleWakeWordIntent(intent)
         binding.root.post { refreshStopSpeakingMenuItem() }
         refreshRetryShareMenu(sending = false)
+    }
+
+    override fun onStart() {
+        super.onStart()
+        // Wake uses the same microphone as Cali STT; leaving both active makes recognition fail or loop.
+        CaliWakeService.stop(this)
+    }
+
+    override fun onStop() {
+        CaliWakeAutoStart.tryStartIfUserEnabled(this)
+        super.onStop()
     }
 
     override fun onPause() {
@@ -862,6 +876,7 @@ class AiChatActivity : AppCompatActivity() {
 
     private fun startVoiceCapture(autoSend: Boolean) {
         voiceAutoSend = autoSend
+        cancelPendingListenAfter()
         Toast.makeText(this, R.string.cali_listening, Toast.LENGTH_SHORT).show()
         val useVosk = Prefs.caliOfflineStt(this) && VoskModelStore.isInstalled(this)
         if (!useVosk) {
@@ -882,17 +897,23 @@ class AiChatActivity : AppCompatActivity() {
         }
     }
 
+    private fun cancelPendingListenAfter() {
+        listenAfterRunnable?.let { binding.root.removeCallbacks(it) }
+        listenAfterRunnable = null
+    }
+
     private fun scheduleListenAfterIfNeeded(delayMs: Long = 550L) {
         if (!Prefs.caliListenAfter(this)) return
-        binding.root.postDelayed(
-            {
-                if (isDestroyed || isFinishing) return@postDelayed
-                if (!binding.btnSend.isEnabled) return@postDelayed
-                if (caliVoice.isSpeaking()) return@postDelayed
-                ensureMicThenListen(autoSend = true)
-            },
-            delayMs,
-        )
+        cancelPendingListenAfter()
+        val r = Runnable {
+            listenAfterRunnable = null
+            if (isDestroyed || isFinishing) return@Runnable
+            if (!binding.btnSend.isEnabled) return@Runnable
+            if (caliVoice.isSpeaking()) return@Runnable
+            ensureMicThenListen(autoSend = true)
+        }
+        listenAfterRunnable = r
+        binding.root.postDelayed(r, delayMs)
     }
 
     private fun sendMessage() {
@@ -943,6 +964,7 @@ class AiChatActivity : AppCompatActivity() {
         pendingTfliteUrl = null
         binding.btnInstallSuggested.visibility = View.GONE
         caliVoice.stopSpeaking()
+        cancelPendingListenAfter()
         clearConnectionBanner()
 
         val onDevice = Prefs.assistantOnDeviceLlm(this)
@@ -1286,6 +1308,7 @@ class AiChatActivity : AppCompatActivity() {
     }
 
     override fun onDestroy() {
+        cancelPendingListenAfter()
         caliVoice.shutdown()
         runBlocking {
             OnDeviceLlm.closeAll()
