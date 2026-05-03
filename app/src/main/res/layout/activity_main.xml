@@ -42,6 +42,33 @@
                 android:layout_height="wrap_content"
                 android:text="@string/train" />
 
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnLoadSaved"
+                style="@style/Widget.Material3.Button.OutlinedButton"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:enabled="false"
+                android:text="@string/load_saved" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnContinueTrain"
+                style="@style/Widget.Material3.Button.OutlinedButton"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:enabled="false"
+                android:text="@string/continue_train" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnDeleteCheckpoint"
+                style="@style/Widget.Material3.Button.TextButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:enabled="false"
+                android:text="@string/delete_checkpoint" />
+
             <com.google.android.material.materialswitch.MaterialSwitch
                 android:id="@+id/switchNetwork"
                 android:layout_width="match_parent"

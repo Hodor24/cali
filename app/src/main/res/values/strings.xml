@@ -2,6 +2,18 @@
 <resources>
     <string name="app_name">Tab ML Box</string>
     <string name="train">Train from scratch</string>
+    <string name="load_saved">Load saved weights &amp; test XOR</string>
+    <string name="continue_train">Continue training (from saved weights)</string>
+    <string name="continue_train_missing">Save a checkpoint first (train from scratch once).</string>
+    <string name="continue_train_start">Continuing from your saved weights (2000 more epochs)…</string>
+    <string name="delete_checkpoint">Delete saved weights</string>
+    <string name="delete_checkpoint_title">Delete checkpoint?</string>
+    <string name="delete_checkpoint_message">Removes the JSON file from app storage. This cannot be undone.</string>
+    <string name="delete_checkpoint_done">Saved weights deleted.</string>
+    <string name="delete_action">Delete</string>
+    <string name="load_saved_missing">No saved checkpoint yet. Train once to create one.</string>
+    <string name="load_saved_run_header">Loaded your saved weights:</string>
+    <string name="saved_checkpoint">Saved weights to app storage (private).</string>
     <string name="train_hint">Trains a tiny network on synthetic XOR data. No pretrained weights, no network.</string>
     <string name="output_log">Training log</string>
     <string name="allow_network">Allow network (future use)</string>

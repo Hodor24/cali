@@ -6,35 +6,65 @@ import kotlin.random.Random
 
 /**
  * Tiny 2 → H → 1 MLP on XOR: sigmoid activations, MSE loss, SGD.
- * Weights start random — no external checkpoints.
+ * Create with [newRandom] or [fromCheckpoint]; [toCheckpoint] exports your weights.
  */
-class XorTrainer(
-    private val hiddenSize: Int = 16,
-    private val learningRate: Double = 0.5,
-    rng: Random = Random.Default,
+class XorTrainer private constructor(
+    private val hiddenSize: Int,
+    private val learningRate: Double,
+    private val w1: Array<DoubleArray>,
+    private val b1: DoubleArray,
+    private val w2: DoubleArray,
+    private var b2: Double,
 ) {
-    private val w1: Array<DoubleArray> = Array(2) { DoubleArray(hiddenSize) }
-    private val b1 = DoubleArray(hiddenSize)
-    private val w2 = DoubleArray(hiddenSize)
-    private var b2 = 0.0
-
-    init {
-        fun hiInit() = (rng.nextDouble() - 0.5) * 2.0 * sqrt(2.0 / (2 + hiddenSize))
-        for (i in 0 until 2) {
-            for (j in 0 until hiddenSize) {
-                w1[i][j] = hiInit()
-            }
-        }
-        for (j in 0 until hiddenSize) {
-            w2[j] = (rng.nextDouble() - 0.5) * 0.5
-        }
-    }
 
     data class EpochLog(val epoch: Int, val loss: Double)
 
+    companion object {
+        fun newRandom(
+            hiddenSize: Int = 16,
+            learningRate: Double = 0.5,
+            rng: Random = Random.Default,
+        ): XorTrainer {
+            val w1 = Array(2) { DoubleArray(hiddenSize) }
+            val b1 = DoubleArray(hiddenSize)
+            val w2 = DoubleArray(hiddenSize)
+            var b2 = 0.0
+            fun hiInit() = (rng.nextDouble() - 0.5) * 2.0 * sqrt(2.0 / (2 + hiddenSize))
+            for (i in 0 until 2) {
+                for (j in 0 until hiddenSize) {
+                    w1[i][j] = hiInit()
+                }
+            }
+            for (j in 0 until hiddenSize) {
+                w2[j] = (rng.nextDouble() - 0.5) * 0.5
+            }
+            return XorTrainer(hiddenSize, learningRate, w1, b1, w2, b2)
+        }
+
+        fun fromCheckpoint(
+            cp: XorCheckpoint,
+            learningRate: Double = 0.5,
+        ): XorTrainer {
+            require(cp.w1.size == 2 && cp.w1[0].size == cp.hiddenSize)
+            require(cp.b1.size == cp.hiddenSize && cp.w2.size == cp.hiddenSize)
+            val w1 = Array(2) { i -> cp.w1[i].toDoubleArray() }
+            val b1 = cp.b1.toDoubleArray()
+            val w2 = cp.w2.toDoubleArray()
+            val b2 = cp.b2
+            return XorTrainer(cp.hiddenSize, learningRate, w1, b1, w2, b2)
+        }
+    }
+
+    fun toCheckpoint(): XorCheckpoint = XorCheckpoint(
+        hiddenSize = hiddenSize,
+        w1 = w1.map { it.toList() },
+        b1 = b1.toList(),
+        w2 = w2.toList(),
+        b2 = b2,
+    )
+
     private fun sigmoid(x: Double): Double = 1.0 / (1.0 + exp(-x))
 
-    /** y = sigmoid(z); derivative w.r.t. z given y */
     private fun sigmoidPrimeFromY(y: Double): Double = y * (1.0 - y)
 
     fun train(
