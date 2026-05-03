@@ -1,9 +1,17 @@
 package dev.tabml.box
 
+import android.Manifest
+import android.content.Intent
+import android.content.pm.PackageManager
+import android.os.Build
 import android.os.Bundle
 import android.view.View
 import android.widget.Toast
+import com.google.android.material.materialswitch.MaterialSwitch
+import com.google.android.material.textfield.TextInputEditText
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import dev.tabml.box.databinding.ActivityMainBinding
@@ -21,6 +29,8 @@ class MainActivity : AppCompatActivity() {
 
     /** True while training, TFLite demo, or HTTPS download is in progress. */
     private var workLocked = false
+
+    private var nvqWatchOfferShowing = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -55,8 +65,339 @@ class MainActivity : AppCompatActivity() {
         refreshCheckpointUi()
         updateNetworkUi()
         binding.btnOpenAssistant.setOnClickListener {
-            startActivity(AiChatActivity.intent(this))
+            startActivity(AiChatActivity.intent(this, nvqAssessorPreferred = false))
         }
+        binding.btnOpenAssessorAssistant.setOnClickListener {
+            startActivity(AiChatActivity.intent(this, nvqAssessorPreferred = true))
+        }
+
+        binding.btnOpenOperations.setOnClickListener {
+            startActivity(android.content.Intent(this, OperationsActivity::class.java))
+        }
+
+        binding.btnDownloadVoskWakeModel.setOnClickListener { downloadVoskForWake() }
+
+        NvqWatchNotifier.ensureChannel(this)
+        binding.btnNvqWatchOpenA11y.setOnClickListener {
+            NvqWatchAccess.openAccessibilitySettings(this)
+        }
+
+        binding.btnExportObservations.setOnClickListener { exportObservations() }
+        binding.btnClearObservations.setOnClickListener { confirmClearObservations() }
+        refreshNvqWatchUi()
+        refreshObservationsUi()
+        refreshCaliWakeSwitches()
+
+        binding.btnCaliSetPin.setOnClickListener { showCaliPinSetupDialog() }
+        binding.btnCaliClearLocalData.setOnClickListener { confirmClearCaliLocalData() }
+    }
+
+    private fun refreshCaliWakeSwitches() {
+        binding.switchCaliWakeListen.setOnCheckedChangeListener(null)
+        binding.switchCaliWakeListen.isChecked = Prefs.caliWakeEnabled(this)
+        binding.switchCaliWakeListen.setOnCheckedChangeListener { _, on ->
+            Prefs.setCaliWakeEnabled(this, on)
+            if (on) {
+                tryStartCaliWakeWithPermissions()
+            } else {
+                CaliWakeService.stop(this)
+            }
+            refreshCaliWakeStatusText()
+        }
+        binding.switchCaliWakeChargeOnly.setOnCheckedChangeListener(null)
+        binding.switchCaliWakeChargeOnly.isChecked = Prefs.caliWakeChargeOnly(this)
+        binding.switchCaliWakeChargeOnly.setOnCheckedChangeListener { _, on ->
+            Prefs.setCaliWakeChargeOnly(this, on)
+            if (Prefs.caliWakeEnabled(this)) restartCaliWakeService()
+            refreshCaliWakeStatusText()
+        }
+        refreshCaliWakeStatusText()
+    }
+
+    private fun refreshCaliWakeStatusText() {
+        binding.textCaliWakeStatus.text = when {
+            !VoskModelStore.isInstalled(this) ->
+                getString(R.string.cali_wake_status_need_model)
+            Prefs.caliWakeEnabled(this) ->
+                getString(R.string.cali_wake_status_listening)
+            else ->
+                getString(R.string.cali_wake_status_ready)
+        }
+    }
+
+    private fun downloadVoskForWake() {
+        if (!Prefs.allowNetwork(this)) {
+            Toast.makeText(this, R.string.ai_need_network, Toast.LENGTH_LONG).show()
+            return
+        }
+        binding.btnDownloadVoskWakeModel.isEnabled = false
+        lifecycleScope.launch(Dispatchers.IO) {
+            val result = VoskModelDownloader.downloadAndInstall(this@MainActivity)
+            withContext(Dispatchers.Main) {
+                binding.btnDownloadVoskWakeModel.isEnabled = true
+                refreshCaliWakeStatusText()
+                Toast.makeText(
+                    this@MainActivity,
+                    if (result.isSuccess) R.string.cali_vosk_download_ok else R.string.cali_vosk_download_fail,
+                    Toast.LENGTH_LONG,
+                ).show()
+                if (Prefs.caliWakeEnabled(this@MainActivity)) restartCaliWakeService()
+            }
+        }
+    }
+
+    private fun tryStartCaliWakeWithPermissions() {
+        if (!VoskModelStore.isInstalled(this)) {
+            Toast.makeText(this, R.string.cali_wake_need_vosk_model, Toast.LENGTH_LONG).show()
+            Prefs.setCaliWakeEnabled(this, false)
+            refreshCaliWakeSwitches()
+            return
+        }
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO) !=
+            PackageManager.PERMISSION_GRANTED
+        ) {
+            requestPermissions(arrayOf(Manifest.permission.RECORD_AUDIO), 5002)
+            return
+        }
+        if (Build.VERSION.SDK_INT >= 33 &&
+            ContextCompat.checkSelfPermission(
+                this,
+                Manifest.permission.POST_NOTIFICATIONS,
+            ) != PackageManager.PERMISSION_GRANTED
+        ) {
+            requestPermissions(arrayOf(Manifest.permission.POST_NOTIFICATIONS), 5003)
+            return
+        }
+        if (Prefs.caliWakeChargeOnly(this) && !isBatteryChargingOrFull()) {
+            Toast.makeText(this, R.string.cali_wake_need_charging, Toast.LENGTH_LONG).show()
+            Prefs.setCaliWakeEnabled(this, false)
+            refreshCaliWakeSwitches()
+            return
+        }
+        CaliWakeService.start(this)
+        refreshCaliWakeStatusText()
+    }
+
+    private fun showCaliPinSetupDialog() {
+        val v = layoutInflater.inflate(R.layout.dialog_cali_pin_setup, null, false)
+        val switchReq = v.findViewById<MaterialSwitch>(R.id.switchRequirePin)
+        val editPin = v.findViewById<TextInputEditText>(R.id.editCaliPinSetup)
+        val editConfirm = v.findViewById<TextInputEditText>(R.id.editCaliPinConfirm)
+        val hadHash = AiSecurePrefs.caliPinHash(this).isNotBlank()
+        switchReq.isChecked = Prefs.caliPinEnabled(this) && hadHash
+
+        val dialog = MaterialAlertDialogBuilder(this)
+            .setTitle(R.string.cali_pin_set_change)
+            .setView(v)
+            .setNegativeButton(android.R.string.cancel, null)
+            .setPositiveButton(R.string.ai_save, null)
+            .create()
+        dialog.setOnShowListener {
+            dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener {
+                if (!switchReq.isChecked) {
+                    AiSecurePrefs.clearCaliPin(this)
+                    Prefs.setCaliPinEnabled(this, false)
+                    CaliPinSession.unlocked = true
+                    Toast.makeText(this, R.string.cali_pin_disabled, Toast.LENGTH_SHORT).show()
+                    dialog.dismiss()
+                    return@setOnClickListener
+                }
+                val p = editPin.text?.toString().orEmpty()
+                val c = editConfirm.text?.toString().orEmpty()
+                if (p.isEmpty() && c.isEmpty()) {
+                    if (hadHash) {
+                        Prefs.setCaliPinEnabled(this, true)
+                        Toast.makeText(this, R.string.cali_pin_saved, Toast.LENGTH_SHORT).show()
+                        dialog.dismiss()
+                    } else {
+                        Toast.makeText(this, R.string.cali_pin_enter_new, Toast.LENGTH_SHORT).show()
+                    }
+                    return@setOnClickListener
+                }
+                if (p.length < 4) {
+                    Toast.makeText(this, R.string.cali_pin_too_short, Toast.LENGTH_SHORT).show()
+                    return@setOnClickListener
+                }
+                if (p != c) {
+                    Toast.makeText(this, R.string.cali_pin_mismatch, Toast.LENGTH_SHORT).show()
+                    return@setOnClickListener
+                }
+                AiSecurePrefs.setCaliPinHash(this, CaliPinHasher.sha256Hex(p))
+                Prefs.setCaliPinEnabled(this, true)
+                CaliPinSession.unlocked = true
+                Toast.makeText(this, R.string.cali_pin_saved, Toast.LENGTH_SHORT).show()
+                dialog.dismiss()
+            }
+        }
+        dialog.show()
+    }
+
+    private fun confirmClearCaliLocalData() {
+        MaterialAlertDialogBuilder(this)
+            .setTitle(R.string.cali_clear_data_confirm_title)
+            .setMessage(R.string.cali_clear_data_confirm_message)
+            .setNegativeButton(android.R.string.cancel, null)
+            .setPositiveButton(R.string.delete_action) { _, _ ->
+                CaliDataWiper.wipeTranscriptAndObservations(this)
+                Toast.makeText(this, R.string.cali_data_cleared, Toast.LENGTH_SHORT).show()
+            }
+            .show()
+    }
+
+    private fun restartCaliWakeService() {
+        CaliWakeService.stop(this)
+        if (Prefs.caliWakeEnabled(this)) {
+            tryStartCaliWakeWithPermissions()
+        }
+    }
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        setIntent(intent)
+    }
+
+    override fun onRequestPermissionsResult(
+        requestCode: Int,
+        permissions: Array<out String>,
+        grantResults: IntArray,
+    ) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        if (requestCode == 4001 && grantResults.isNotEmpty() &&
+            grantResults[0] == PackageManager.PERMISSION_GRANTED
+        ) {
+            NvqWatchNotifier.ensureChannel(this)
+        }
+        if (requestCode == 5002) {
+            if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                if (Prefs.caliWakeEnabled(this)) tryStartCaliWakeWithPermissions()
+            } else {
+                Toast.makeText(this, R.string.cali_need_mic_permission, Toast.LENGTH_LONG).show()
+                Prefs.setCaliWakeEnabled(this, false)
+                refreshCaliWakeSwitches()
+            }
+        }
+        if (requestCode == 5003) {
+            if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                if (Prefs.caliWakeEnabled(this)) tryStartCaliWakeWithPermissions()
+            } else {
+                Toast.makeText(this, R.string.cali_wake_notif_denied, Toast.LENGTH_LONG).show()
+                Prefs.setCaliWakeEnabled(this, false)
+                refreshCaliWakeSwitches()
+            }
+        }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        if (intent.getBooleanExtra(NvqWatchNotifier.EXTRA_SHOW_NVQ_PROMPT, false)) {
+            intent.removeExtra(NvqWatchNotifier.EXTRA_SHOW_NVQ_PROMPT)
+        }
+        refreshNvqWatchUi()
+        refreshObservationsUi()
+        refreshCaliWakeSwitches()
+        if (!Prefs.caliWakeEnabled(this)) {
+            CaliWakeService.stop(this)
+        }
+        binding.root.post { tryShowNvqWatchOfferDialog() }
+    }
+
+    private fun refreshNvqWatchUi() {
+        binding.switchNvqWatchOptIn.setOnCheckedChangeListener(null)
+        binding.switchNvqWatchOptIn.isChecked = Prefs.nvqWatchAppOptIn(this)
+        binding.switchNvqWatchOptIn.setOnCheckedChangeListener { _, on ->
+            Prefs.setNvqWatchAppOptIn(this, on)
+            if (on) {
+                NvqWatchNotifier.ensureChannel(this)
+                if (Build.VERSION.SDK_INT >= 33 &&
+                    ContextCompat.checkSelfPermission(
+                        this,
+                        Manifest.permission.POST_NOTIFICATIONS,
+                    ) != PackageManager.PERMISSION_GRANTED
+                ) {
+                    requestPermissions(arrayOf(Manifest.permission.POST_NOTIFICATIONS), 4001)
+                }
+            }
+            refreshNvqWatchUi()
+        }
+        val svcOn = NvqWatchAccess.isServiceEnabled(this)
+        binding.textNvqWatchStatus.text = buildString {
+            append(getString(R.string.nvq_watch_status_prefix))
+            append(
+                if (svcOn) {
+                    getString(R.string.nvq_watch_status_on)
+                } else {
+                    getString(R.string.nvq_watch_status_off)
+                },
+            )
+        }
+    }
+
+    private fun tryShowNvqWatchOfferDialog() {
+        if (nvqWatchOfferShowing) return
+        if (!Prefs.nvqWatchPendingPrompt(this)) return
+        nvqWatchOfferShowing = true
+        val reason = Prefs.nvqWatchPendingReason(this).ifBlank {
+            getString(R.string.nvq_watch_reason_keyword_match)
+        }
+        MaterialAlertDialogBuilder(this)
+            .setTitle(R.string.nvq_watch_offer_title)
+            .setMessage(getString(R.string.nvq_watch_offer_message, reason))
+            .setCancelable(false)
+            .setPositiveButton(R.string.nvq_watch_offer_enable) { _, _ ->
+                Prefs.setObservationLearning(this, true)
+                Prefs.setNvqAssessorMode(this, true)
+                Prefs.clearNvqWatchPending(this)
+                refreshObservationsUi()
+            }
+            .setNegativeButton(R.string.nvq_watch_offer_later) { _, _ ->
+                Prefs.clearNvqWatchPending(this)
+            }
+            .setNeutralButton(R.string.nvq_watch_offer_never) { _, _ ->
+                Prefs.setNvqWatchNeverSuggest(this, true)
+                Prefs.setNvqWatchAppOptIn(this, false)
+                Prefs.clearNvqWatchPending(this)
+                refreshNvqWatchUi()
+            }
+            .setOnDismissListener { nvqWatchOfferShowing = false }
+            .show()
+    }
+
+    private fun refreshObservationsUi() {
+        binding.switchObservationLearningMain.setOnCheckedChangeListener(null)
+        binding.switchObservationLearningMain.isChecked = Prefs.observationLearning(this)
+        binding.switchObservationLearningMain.setOnCheckedChangeListener { _, checked ->
+            Prefs.setObservationLearning(this, checked)
+        }
+        binding.textObservationsInsight.text = SessionObservationStore.buildInsightsDisplay(this)
+        val has = SessionObservationStore.hasFile(this)
+        binding.btnExportObservations.isEnabled = has
+        binding.btnClearObservations.isEnabled = has
+    }
+
+    private fun exportObservations() {
+        val text = SessionObservationStore.exportText(this).trim()
+        if (text.isEmpty()) {
+            Toast.makeText(this, R.string.observations_insights_empty, Toast.LENGTH_SHORT).show()
+            return
+        }
+        val send = Intent(Intent.ACTION_SEND).apply {
+            type = "text/plain"
+            putExtra(Intent.EXTRA_TEXT, text)
+        }
+        startActivity(Intent.createChooser(send, getString(R.string.observations_export_chooser)))
+    }
+
+    private fun confirmClearObservations() {
+        MaterialAlertDialogBuilder(this)
+            .setTitle(R.string.observations_clear_title)
+            .setMessage(R.string.observations_clear_message)
+            .setNegativeButton(android.R.string.cancel, null)
+            .setPositiveButton(R.string.delete_action) { _, _ ->
+                SessionObservationStore.clear(this)
+                refreshObservationsUi()
+                Toast.makeText(this, R.string.observations_clear_done, Toast.LENGTH_SHORT).show()
+            }
+            .show()
     }
 
     private fun updateNetworkUi() {
