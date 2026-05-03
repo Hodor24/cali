@@ -29,6 +29,31 @@ from http.server import BaseHTTPRequestHandler, HTTPServer
 PORT = 8765
 
 
+def _stub_assistant_reply(last_user: str, nvq_on: bool) -> str:
+    """Short, human-sounding reply that makes the dev/stub role obvious."""
+    if not last_user.strip():
+        return (
+            "Hi—I'm the little test server on your laptop, not a full language model. "
+            "Send anything you like and I'll confirm the app reached your machine. "
+            "When you're ready for real answers, point the same HTTPS URL at Ollama, vLLM, "
+            "LiteLLM, or any OpenAI-compatible `/v1/chat/completions` service."
+        )
+    preview = last_user.strip().replace("\n", " ")
+    if len(preview) > 320:
+        preview = preview[:317] + "…"
+    assess_note = (
+        "\n\n(Assessor mode looks on in the app—your real LLM should handle judgement and AO detail.)"
+        if nvq_on
+        else ""
+    )
+    return (
+        f"Thanks—that came through. Here's what I heard: “{preview}”\n\n"
+        "I'm only the **Tab ML Box dev stub** on this Mac, so I won't try to invent a full answer. "
+        "Use this setup to prove https → ngrok → your laptop works; then swap the upstream for a real model."
+        f"{assess_note}"
+    )
+
+
 class Handler(BaseHTTPRequestHandler):
     def log_message(self, fmt: str, *args: object) -> None:
         sys.stderr.write("[%s] %s\n" % (self.log_date_time_string(), fmt % args))
@@ -53,31 +78,17 @@ class Handler(BaseHTTPRequestHandler):
             return
 
         messages = data.get("messages") or []
-        system_snip = ""
         last_user = ""
         for m in messages:
-            role = m.get("role")
-            content = (m.get("content") or "").strip()
-            if role == "system" and content:
-                system_snip = content[:400] + ("…" if len(content) > 400 else "")
-            if role == "user":
-                last_user = content
+            if m.get("role") == "user":
+                last_user = (m.get("content") or "").strip()
 
-        nvq_on = "NVQ ASSESSOR BRIEF" in "\n".join(
+        system_blob = "\n".join(
             (m.get("content") or "") for m in messages if m.get("role") == "system"
         )
+        nvq_on = "NVQ ASSESSOR BRIEF" in system_blob
 
-        lines = [
-            "[Tab ML Box dev server — stub LLM]",
-            f"NVQ assessor brief in system message: {'yes' if nvq_on else 'no'}",
-            "",
-            "Last user message:",
-            last_user[:8000] or "(empty)",
-        ]
-        if system_snip:
-            lines += ["", "System prompt (first 400 chars):", system_snip]
-
-        reply = "\n".join(lines)
+        reply = _stub_assistant_reply(last_user, nvq_on)
 
         out = {
             "choices": [

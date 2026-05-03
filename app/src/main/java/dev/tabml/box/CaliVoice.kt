@@ -56,6 +56,7 @@ class CaliVoice(
         engine.setSpeechRate(Prefs.caliTtsRate(activity))
         engine.setPitch(1.0f)
         engine.setOnUtteranceProgressListener(
+            @Suppress("DEPRECATION")
             object : UtteranceProgressListener() {
                 override fun onStart(utteranceId: String?) {
                     activity.runOnUiThread { onSpeakingChanged?.invoke(true) }
