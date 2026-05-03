@@ -9,7 +9,7 @@ Standalone repo (**not** the Candidateflow WhatsApp project). App id: `dev.tabml
 - **Train from scratch** — random weights, 8000 epochs on XOR, then saves `xor_checkpoint.json` in private storage.
 - **Continue training (from saved weights)** — 2000 more epochs starting from your file (still offline for this path).
 - **Load saved weights & test XOR** — inference only; shows last saved loss and time if present.
-- **TensorFlow Lite XOR** — runs a `.tflite` model; **bundled** `assets/models/xor_mlp.tflite` or a **downLOADed** file you pulled via HTTPS when the network toggle is on.
+- **TensorFlow Lite XOR** — runs a `.tflite` model; **bundled** `assets/models/xor_mlp.tflite` or a **downloaded** file you pulled via HTTPS when the network toggle is on.
 - **Allow HTTPS downloads** — when **off**, the app does **not** use the network. When **on**, you can download a **`.tflite`** (replaces on-disk inference model) or an **APK** (opens the system installer so you can install a newer build with updated **native** TF Lite `.so` libraries).
 
 Manifest: `INTERNET`, `ACCESS_NETWORK_STATE`, `REQUEST_INSTALL_PACKAGES`. **Cleartext HTTP is disabled** (`usesCleartextTraffic="false"`).
