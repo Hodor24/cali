@@ -1,8 +1,6 @@
 package dev.tabml.box
 
 import android.os.Bundle
-import android.view.Menu
-import android.view.MenuItem
 import android.view.View
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
@@ -56,20 +54,13 @@ class MainActivity : AppCompatActivity() {
 
         refreshCheckpointUi()
         updateNetworkUi()
-    }
-
-    override fun onCreateOptionsMenu(menu: Menu): Boolean {
-        menuInflater.inflate(R.menu.main_menu, menu)
-        return true
-    }
-
-    override fun onOptionsItemSelected(item: MenuItem): Boolean {
-        return when (item.itemId) {
-            R.id.action_ai_chat -> {
+        binding.toolbar.setOnMenuItemClickListener { item ->
+            if (item.itemId == R.id.action_ai_chat) {
                 startActivity(AiChatActivity.intent(this))
                 true
+            } else {
+                false
             }
-            else -> super.onOptionsItemSelected(item)
         }
     }
 

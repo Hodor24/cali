@@ -33,6 +33,9 @@ class AiChatActivity : AppCompatActivity() {
         binding.toolbar.setNavigationOnClickListener { finish() }
         binding.toolbar.setOnMenuItemClickListener(this::onToolbarMenu)
 
+        binding.btnAiHelp.setOnClickListener { showHelpDialog() }
+        binding.btnAiApiSettings.setOnClickListener { showApiSettingsDialog() }
+
         binding.chatList.layoutManager = LinearLayoutManager(this)
         binding.chatList.adapter = adapter
 
@@ -54,11 +57,20 @@ class AiChatActivity : AppCompatActivity() {
     }
 
     private fun onToolbarMenu(item: MenuItem): Boolean {
-        if (item.itemId == R.id.action_ai_settings) {
-            showApiSettingsDialog()
-            return true
+        when (item.itemId) {
+            R.id.action_ai_settings -> showApiSettingsDialog()
+            R.id.action_ai_help -> showHelpDialog()
+            else -> return false
         }
-        return false
+        return true
+    }
+
+    private fun showHelpDialog() {
+        MaterialAlertDialogBuilder(this)
+            .setTitle(R.string.ai_help_title)
+            .setMessage(R.string.ai_help_body)
+            .setPositiveButton(android.R.string.ok, null)
+            .show()
     }
 
     private fun showApiSettingsDialog() {
@@ -69,6 +81,8 @@ class AiChatActivity : AppCompatActivity() {
         MaterialAlertDialogBuilder(this)
             .setTitle(R.string.ai_api_settings)
             .setView(d.root)
+            .setNeutralButton(R.string.ai_help_menu) { _, _ -> showHelpDialog() }
+            .setNegativeButton(android.R.string.cancel, null)
             .setPositiveButton(R.string.ai_save) { _, _ ->
                 val base = d.editBaseUrl.text?.toString()?.trim().orEmpty()
                 if (base.isNotEmpty()) {
@@ -80,7 +94,6 @@ class AiChatActivity : AppCompatActivity() {
                 }
                 AiSecurePrefs.setApiKey(this, d.editApiKey.text?.toString().orEmpty())
             }
-            .setNegativeButton(android.R.string.cancel, null)
             .show()
     }
 
@@ -96,9 +109,9 @@ class AiChatActivity : AppCompatActivity() {
         }
         val key = AiSecurePrefs.apiKey(this)
         if (key.isBlank()) {
-            Toast.makeText(this, R.string.ai_need_api_key, Toast.LENGTH_LONG).show()
-            return
+            Toast.makeText(this, R.string.ai_no_key_toast, Toast.LENGTH_SHORT).show()
         }
+
         val subject = binding.inputSubject.text?.toString()?.trim().orEmpty()
         val body = binding.inputMessage.text?.toString()?.trim().orEmpty()
         if (body.isEmpty()) return

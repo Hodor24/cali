@@ -40,8 +40,12 @@ class OpenAiChatClient(
             .put("messages", arr)
         val req = Request.Builder()
             .url(url)
-            .addHeader("Authorization", "Bearer $apiKey")
             .addHeader("Content-Type", "application/json")
+            .apply {
+                if (apiKey.isNotBlank()) {
+                    addHeader("Authorization", "Bearer $apiKey")
+                }
+            }
             .post(body.toString().toRequestBody(jsonMedia))
             .build()
         client.newCall(req).execute().use { resp ->

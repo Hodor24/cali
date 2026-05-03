@@ -52,7 +52,13 @@
     <string name="ai_setting_api_key">API key (stored encrypted on device)</string>
     <string name="ai_save">Save</string>
     <string name="ai_need_network">Turn on “Allow HTTPS downloads” on the main screen, then return here.</string>
-    <string name="ai_need_api_key">Set your API key in API settings (encrypted storage).</string>
+    <string name="ai_need_api_key">If you use OpenAI’s cloud API you need a key from https://platform.openai.com/api-keys (paid account). You can also leave the key blank when using your own HTTPS server that does not require a Bearer token.</string>
+    <string name="ai_no_key_toast">No API key — sending without Authorization (for local/unauthenticated HTTPS only).</string>
+    <string name="ai_help_menu">How to connect</string>
+    <string name="ai_help_title">Connect without confusion</string>
+    <string name="ai_how_to_connect">How to connect</string>
+    <string name="ai_open_settings_short">API &amp; endpoint</string>
+    <string name="ai_help_body">You do not have to use OpenAI.\n\n• Cloud (OpenAI, etc.): create an API key on the provider’s site, open API &amp; endpoint, set Base URL (e.g. https://api.openai.com), model name, and paste the key. OpenAI keys are created at https://platform.openai.com/api-keys\n\n• No key: leave API key empty only if your Base URL is an HTTPS server YOU control that accepts requests without an Authorization header (some local proxies or gateways). This app cannot use plain http://.\n\n• The tablet must reach that server over HTTPS. Home Wi-Fi “http://192.168…” will not work unless you terminate HTTPS (e.g. reverse proxy + trusted cert).\n\nGradle libraries cannot be auto-installed in the app; the assistant suggests lines to paste in Android Studio.</string>
     <string name="ai_error">AI error: %1$s</string>
     <string name="ai_install_done">Installed model (%1$d bytes). Run TensorFlow Lite on the main screen to test.</string>
     <string name="ai_no_suggested_url">No suggested .tflite in the last reply.</string>
