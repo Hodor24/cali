@@ -2,15 +2,14 @@ package dev.tabml.box
 
 import android.content.Context
 import org.tensorflow.lite.Interpreter
-import org.tensorflow.lite.support.common.FileUtil
 
-/** Runs the bundled `assets/models/xor_mlp.tflite` via TensorFlow Lite (inference only). */
+/** TensorFlow Lite XOR runner; uses bundled asset or a user-downloaded `.tflite` from [ModelLoader]. */
 class XorTfliteRunner(context: Context) : AutoCloseable {
 
     private val interpreter: Interpreter
 
     init {
-        val modelBuffer = FileUtil.loadMappedFile(context, "models/xor_mlp.tflite")
+        val modelBuffer = ModelLoader.loadMappedForInference(context)
         val opts = Interpreter.Options().apply { setNumThreads(4) }
         interpreter = Interpreter(modelBuffer, opts)
     }

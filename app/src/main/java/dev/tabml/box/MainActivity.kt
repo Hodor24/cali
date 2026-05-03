@@ -1,6 +1,7 @@
 package dev.tabml.box
 
 import android.os.Bundle
+import android.view.View
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
@@ -18,15 +19,21 @@ class MainActivity : AppCompatActivity() {
     private lateinit var binding: ActivityMainBinding
     private val log = StringBuilder()
 
+    /** True while training, TFLite demo, or HTTPS download is in progress. */
+    private var workLocked = false
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
         setSupportActionBar(binding.toolbar)
 
+        binding.inputHttpsUrl.setText(Prefs.lastHttpsUrl(this))
+
         binding.switchNetwork.isChecked = Prefs.allowNetwork(this)
         binding.switchNetwork.setOnCheckedChangeListener { _, isChecked ->
             Prefs.setAllowNetwork(this, isChecked)
+            updateNetworkUi()
             if (isChecked) {
                 Toast.makeText(
                     this,
@@ -41,22 +48,42 @@ class MainActivity : AppCompatActivity() {
         binding.btnContinueTrain.setOnClickListener { continueTrainingFromSaved() }
         binding.btnDeleteCheckpoint.setOnClickListener { confirmDeleteCheckpoint() }
         binding.btnTfliteXor.setOnClickListener { runTfliteXor() }
+        binding.btnDownloadTflite.setOnClickListener { downloadTflite() }
+        binding.btnDownloadApk.setOnClickListener { downloadApk() }
+        binding.btnUseBundledTflite.setOnClickListener { resetBundledTflite() }
+
         refreshCheckpointUi()
+        updateNetworkUi()
     }
 
-    private fun refreshCheckpointUi() {
-        val has = CheckpointStore.exists(this)
-        binding.btnLoadSaved.isEnabled = has
-        binding.btnContinueTrain.isEnabled = has
-        binding.btnDeleteCheckpoint.isEnabled = has
+    private fun updateNetworkUi() {
+        val on = Prefs.allowNetwork(this)
+        binding.networkExtras.visibility = if (on) View.VISIBLE else View.GONE
+        refreshDownloadAvailability()
     }
 
-    private fun setTrainingUiLocked(locked: Boolean) {
+    private fun refreshDownloadAvailability() {
+        val net = Prefs.allowNetwork(this)
+        binding.btnDownloadTflite.isEnabled = !workLocked && net
+        binding.btnDownloadApk.isEnabled = !workLocked && net
+        binding.btnUseBundledTflite.isEnabled = !workLocked
+    }
+
+    private fun setWorkLocked(locked: Boolean) {
+        workLocked = locked
         binding.btnTrain.isEnabled = !locked
         binding.btnLoadSaved.isEnabled = !locked && CheckpointStore.exists(this)
         binding.btnContinueTrain.isEnabled = !locked && CheckpointStore.exists(this)
         binding.btnDeleteCheckpoint.isEnabled = !locked && CheckpointStore.exists(this)
         binding.btnTfliteXor.isEnabled = !locked
+        refreshDownloadAvailability()
+    }
+
+    private fun refreshCheckpointUi() {
+        val has = CheckpointStore.exists(this)
+        binding.btnLoadSaved.isEnabled = !workLocked && has
+        binding.btnContinueTrain.isEnabled = !workLocked && has
+        binding.btnDeleteCheckpoint.isEnabled = !workLocked && has
     }
 
     private fun saveCheckpoint(trainer: XorTrainer, finalLoss: Double) {
@@ -68,7 +95,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun runTraining() {
-        setTrainingUiLocked(true)
+        setWorkLocked(true)
         binding.logView.text = getString(R.string.status_training)
         log.clear()
         appendLog(getString(R.string.log_start))
@@ -109,7 +136,7 @@ class MainActivity : AppCompatActivity() {
                 checkLines.forEach { appendLog(it) }
                 appendLog(getString(R.string.saved_checkpoint))
                 appendLog(getString(R.string.log_done))
-                setTrainingUiLocked(false)
+                setWorkLocked(false)
                 refreshCheckpointUi()
             }
         }
@@ -120,7 +147,7 @@ class MainActivity : AppCompatActivity() {
             Toast.makeText(this, R.string.continue_train_missing, Toast.LENGTH_LONG).show()
             return
         }
-        setTrainingUiLocked(true)
+        setWorkLocked(true)
         binding.logView.text = getString(R.string.status_training)
         log.clear()
         appendLog(getString(R.string.continue_train_start))
@@ -157,7 +184,7 @@ class MainActivity : AppCompatActivity() {
                 checkLines.forEach { appendLog(it) }
                 appendLog(getString(R.string.saved_checkpoint))
                 appendLog(getString(R.string.log_done))
-                setTrainingUiLocked(false)
+                setWorkLocked(false)
                 refreshCheckpointUi()
             }
         }
@@ -200,7 +227,7 @@ class MainActivity : AppCompatActivity() {
                 metaLines.forEach { appendLog(it) }
                 appendLog("")
                 checkLines.forEach { appendLog(it) }
-                binding.btnLoadSaved.isEnabled = true
+                refreshCheckpointUi()
             }
         }
     }
@@ -219,8 +246,111 @@ class MainActivity : AppCompatActivity() {
             .show()
     }
 
+    private fun downloadTflite() {
+        val url = binding.inputHttpsUrl.text?.toString().orEmpty()
+        if (url.isBlank()) {
+            Toast.makeText(this, R.string.url_required, Toast.LENGTH_SHORT).show()
+            return
+        }
+        if (!NetworkGuard.isAllowed(this)) {
+            Toast.makeText(this, R.string.network_disabled_toast, Toast.LENGTH_SHORT).show()
+            return
+        }
+        Prefs.setLastHttpsUrl(this, url)
+        setWorkLocked(true)
+        lifecycleScope.launch(Dispatchers.IO) {
+            try {
+                val result = runCatching {
+                    val dest = ModelLoader.downloadedFile(this@MainActivity)
+                    val n = HttpsDownload.streamToFile(this@MainActivity, url, dest)
+                    require(n >= 256) { "file too small to be a useful .tflite" }
+                    Prefs.setPreferDownloadedTflite(this@MainActivity, true)
+                    n
+                }
+                withContext(Dispatchers.Main) {
+                    result.fold(
+                        onSuccess = { n ->
+                            Toast.makeText(
+                                this@MainActivity,
+                                getString(R.string.download_tflite_ok, n.toInt()),
+                                Toast.LENGTH_LONG,
+                            ).show()
+                        },
+                        onFailure = { e ->
+                            Toast.makeText(
+                                this@MainActivity,
+                                getString(R.string.download_fail, e.message ?: e.toString()),
+                                Toast.LENGTH_LONG,
+                            ).show()
+                        },
+                    )
+                }
+            } finally {
+                withContext(Dispatchers.Main) {
+                    setWorkLocked(false)
+                }
+            }
+        }
+    }
+
+    private fun downloadApk() {
+        val url = binding.inputHttpsUrl.text?.toString().orEmpty()
+        if (url.isBlank()) {
+            Toast.makeText(this, R.string.url_required, Toast.LENGTH_SHORT).show()
+            return
+        }
+        if (!NetworkGuard.isAllowed(this)) {
+            Toast.makeText(this, R.string.network_disabled_toast, Toast.LENGTH_SHORT).show()
+            return
+        }
+        Prefs.setLastHttpsUrl(this, url)
+        setWorkLocked(true)
+        lifecycleScope.launch(Dispatchers.IO) {
+            try {
+                val result = runCatching {
+                    val dest = ModelLoader.updatesApkFile(this@MainActivity)
+                    val n = HttpsDownload.streamToFile(this@MainActivity, url, dest)
+                    require(n >= 50_000) {
+                        "file too small to be a plausible APK"
+                    }
+                    dest
+                }
+                withContext(Dispatchers.Main) {
+                    result.fold(
+                        onSuccess = { apkFile ->
+                            Toast.makeText(
+                                this@MainActivity,
+                                getString(R.string.download_apk_ok, apkFile.length().toInt()),
+                                Toast.LENGTH_LONG,
+                            ).show()
+                            ApkInstallPrompt.open(this@MainActivity, apkFile)
+                        },
+                        onFailure = { e ->
+                            Toast.makeText(
+                                this@MainActivity,
+                                getString(R.string.download_fail, e.message ?: e.toString()),
+                                Toast.LENGTH_LONG,
+                            ).show()
+                        },
+                    )
+                }
+            } finally {
+                withContext(Dispatchers.Main) {
+                    setWorkLocked(false)
+                }
+            }
+        }
+    }
+
+    private fun resetBundledTflite() {
+        Prefs.setPreferDownloadedTflite(this, false)
+        val f = ModelLoader.downloadedFile(this)
+        if (f.exists()) f.delete()
+        Toast.makeText(this, R.string.use_bundled_done, Toast.LENGTH_SHORT).show()
+    }
+
     private fun runTfliteXor() {
-        setTrainingUiLocked(true)
+        setWorkLocked(true)
         log.clear()
         lifecycleScope.launch(Dispatchers.Default) {
             val lines: List<String> = try {
@@ -252,7 +382,7 @@ class MainActivity : AppCompatActivity() {
             }
             withContext(Dispatchers.Main) {
                 lines.forEach { appendLog(it) }
-                setTrainingUiLocked(false)
+                setWorkLocked(false)
                 refreshCheckpointUi()
             }
         }

@@ -1,32 +1,40 @@
 # Tab ML Box
 
-Offline-first Android app for training a **tiny neural network from scratch** (XOR demo) on your device. No `INTERNET` permission in this build — it cannot open network sockets.
+Android app for **on-device XOR training** (Kotlin) and **TensorFlow Lite inference**, with **optional HTTPS** downloads you explicitly enable.
 
 Standalone repo (**not** the Candidateflow WhatsApp project). App id: `dev.tabml.box`.
 
 ## In the app
 
 - **Train from scratch** — random weights, 8000 epochs on XOR, then saves `xor_checkpoint.json` in private storage.
-- **Continue training (from saved weights)** — 2000 more epochs starting from your file (still offline).
-- **Load saved weights & test XOR** — runs inference only; shows last saved loss and time if present.
-- **Run TensorFlow Lite XOR** — loads `assets/models/xor_mlp.tflite` via **TensorFlow Lite** + **Lite Support** (bundled file). Regenerate with `python3 tools/export_xor_tflite.py` after `pip install tensorflow` if you change the export script.
+- **Continue training (from saved weights)** — 2000 more epochs starting from your file (still offline for this path).
+- **Load saved weights & test XOR** — inference only; shows last saved loss and time if present.
+- **TensorFlow Lite XOR** — runs a `.tflite` model; **bundled** `assets/models/xor_mlp.tflite` or a **downLOADed** file you pulled via HTTPS when the network toggle is on.
+- **Allow HTTPS downloads** — when **off**, the app does **not** use the network. When **on**, you can download a **`.tflite`** (replaces on-disk inference model) or an **APK** (opens the system installer so you can install a newer build with updated **native** TF Lite `.so` libraries).
 
-## TensorFlow Lite (real on-device runtime)
+Manifest: `INTERNET`, `ACCESS_NETWORK_STATE`, `REQUEST_INSTALL_PACKAGES`. **Cleartext HTTP is disabled** (`usesCleartextTraffic="false"`).
 
-Gradle deps: `org.tensorflow:tensorflow-lite`, `org.tensorflow:tensorflow-lite-support`. The XOR `.tflite` is **your artifact** from `tools/export_xor_tflite.py` (trains the same 2→16→1 idea in Python, then converts — not a downloaded checkpoint). Kotlin **Train from scratch** remains independent.
+## Updating “libs”
+
+- **Model / graph:** download a new **`https://…/*.tflite`** with *Download .tflite & use for inference*.
+- **Native TensorFlow Lite runtime:** ship updated `libtensorflowlite_jni.so` (etc.) inside a **new APK** you build; use *Download APK & open installer* to install that APK from a URL **you trust**.
+
+Regenerate the bundled XOR model: `python3 tools/export_xor_tflite.py` (after `pip install tensorflow`).
+
+## TensorFlow Lite (Gradle)
+
+`org.tensorflow:tensorflow-lite`, `org.tensorflow:tensorflow-lite-support`.
 
 ## Open in Android Studio
 
 1. **File → Open** and choose this folder: `tab-ml-box`
-2. Let Gradle sync; install **JDK 17** and Android SDK if prompted.
-3. **Build → Build Bundle(s) / APK(s) → Build APK(s)**  
-   Debug APK path is usually: `app/build/outputs/apk/debug/app-debug.apk`
+2. Create **`local.properties`** with `sdk.dir=…` if needed.
+3. **Build → Build APK(s)** — debug output: `app/build/outputs/apk/debug/app-debug.apk`
 
-## Install on Galaxy Tab S8 (your steps)
+## Install on device
 
-1. On the tablet: **Settings → Security** (or **Developer options**) → allow installing from your source (USB, Files, or “Install unknown apps” for the app you use to open the APK).
-2. Copy `app-debug.apk` to the tablet and open it, or plug in USB and run **Run → Run 'app'** from Android Studio with USB debugging enabled.
+Allow **USB debugging** or sideload the APK; for APK-from-URL installs, allow **install unknown apps** for Tab ML Box when Android prompts.
 
 ## Location
 
-This project was moved out of `candidateflow-whatsapp` so the two stay separate. Path: **`/Users/paulevans/tab-ml-box`**.
+Path: **`/Users/paulevans/tab-ml-box`**.
