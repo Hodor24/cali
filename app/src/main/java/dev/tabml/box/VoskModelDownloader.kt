@@ -24,7 +24,7 @@ object VoskModelDownloader {
         .build()
 
     private const val MODEL_ZIP_URL =
-        "https://alphacephei.com/storage/vosk/models/vosk-model-small-en-us-0.15.zip"
+        "https://alphacephei.com/vosk/models/vosk-model-small-en-us-0.15.zip"
 
     suspend fun downloadAndInstall(context: Context): Result<Unit> = withContext(Dispatchers.IO) {
         runCatching {
