@@ -54,13 +54,8 @@ class MainActivity : AppCompatActivity() {
 
         refreshCheckpointUi()
         updateNetworkUi()
-        binding.toolbar.setOnMenuItemClickListener { item ->
-            if (item.itemId == R.id.action_ai_chat) {
-                startActivity(AiChatActivity.intent(this))
-                true
-            } else {
-                false
-            }
+        binding.btnOpenAssistant.setOnClickListener {
+            startActivity(AiChatActivity.intent(this))
         }
     }
 

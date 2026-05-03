@@ -14,9 +14,16 @@
         android:layout_height="?attr/actionBarSize"
         android:background="?attr/colorPrimary"
         android:elevation="4dp"
-        app:menu="@menu/main_menu"
         app:title="@string/app_name"
         app:titleTextColor="?attr/colorOnPrimary" />
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btnOpenAssistant"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginHorizontal="16dp"
+        android:layout_marginTop="8dp"
+        android:text="@string/open_assistant_chat" />
 
     <androidx.core.widget.NestedScrollView
         android:layout_width="match_parent"

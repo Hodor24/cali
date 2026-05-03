@@ -5,21 +5,21 @@ import android.content.SharedPreferences
 import androidx.security.crypto.EncryptedSharedPreferences
 import androidx.security.crypto.MasterKey
 
-/** Stores the AI API key encrypted at rest (AES). */
+/** Optional HTTPS bearer token for your assistant server, encrypted at rest. */
 object AiSecurePrefs {
 
     private const val PREFS_NAME = "tabml_ai_secure"
-    private const val KEY_API_KEY = "openai_compatible_api_key"
+    private const val KEY_BEARER = "assistant_https_bearer"
 
     fun apiKey(context: Context): String = try {
-        prefs(context).getString(KEY_API_KEY, "") ?: ""
+        prefs(context).getString(KEY_BEARER, "") ?: ""
     } catch (_: Exception) {
         ""
     }
 
     fun setApiKey(context: Context, value: String) {
         try {
-            prefs(context).edit().putString(KEY_API_KEY, value).apply()
+            prefs(context).edit().putString(KEY_BEARER, value).apply()
         } catch (_: Exception) {
         }
     }

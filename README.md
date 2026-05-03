@@ -6,29 +6,29 @@ Standalone repo (**not** the Candidateflow WhatsApp project). App id: `dev.tabml
 
 ## In the app
 
+- **Open assistant chat** — prominent button under the title bar; HTTPS assistant that talks only to **your** configured server.
 - **Train from scratch** — random weights, 8000 epochs on XOR, then saves `xor_checkpoint.json` in private storage.
 - **Continue training (from saved weights)** — 2000 more epochs starting from your file (still offline for this path).
 - **Load saved weights & test XOR** — inference only; shows last saved loss and time if present.
-- **TensorFlow Lite XOR** — runs a `.tflite` model; **bundled** `assets/models/xor_mlp.tflite` or a **downloaded** file you pulled via HTTPS when the network toggle is on.
-- **Allow HTTPS downloads** — when **off**, the app does **not** use the network. When **on**, you can download a **`.tflite`** (replaces on-disk inference model) or an **APK** (opens the system installer so you can install a newer build with updated **native** TF Lite `.so` libraries).
+- **TensorFlow Lite XOR** — runs a `.tflite` model; **bundled** `assets/models/xor_mlp.tflite` or a **downloaded** file via HTTPS when the network toggle is on.
+- **Allow HTTPS downloads** — when **off**, the app does **not** use the network. When **on**, downloads, assistant chat, and APK installs from URLs you enter are allowed.
 
 Manifest: `INTERNET`, `ACCESS_NETWORK_STATE`, `REQUEST_INSTALL_PACKAGES`. **Cleartext HTTP is disabled** (`usesCleartextTraffic="false"`).
 
-## AI assistant (chat)
+## Assistant chat
 
-Toolbar **chat icon** on the home screen opens **AI assistant** when **Allow HTTPS downloads** is on.
+Uses **your** HTTPS base URL (no default third-party host). The app sends `POST /v1/chat/completions` JSON to that origin. **Bearer token** is optional (encrypted when stored). Messages are not sent anywhere except the URL you save under **Your server settings**.
 
-- Set **Library or learning goal (subject)** so every message includes that context.
-- **API settings** (toolbar menu): OpenAI-compatible **base URL** (default `https://api.openai.com`), **model** name, and **API key** (stored with **EncryptedSharedPreferences**). Also works with many **self-hosted** compatible gateways over HTTPS.
-- The model answers in chat and can append a `###ACTION` JSON block with `download_tflite` when it has a **real** `https://` model URL (per instructions it must not invent links). **Install suggested .tflite** runs the same on-device install path as manual HTTPS download.
-- **Gradle libraries** cannot be merged into `build.gradle.kts` from the app at runtime; the assistant is instructed to output exact `implementation(...)` lines for you to paste in Android Studio.
+The assistant can append a `###ACTION` block with `download_tflite` only for real `https://` model URLs. Gradle lines are suggestions to paste in Android Studio, not auto-installed.
 
-Dependencies: **OkHttp** for HTTPS JSON, **androidx.security:security-crypto** for the API key.
+Dependencies: **OkHttp**, **androidx.security:security-crypto** for the optional bearer token.
 
-- **Model / graph:** download a new **`https://…/*.tflite`** with *Download .tflite & use for inference*.
-- **Native TensorFlow Lite runtime:** ship updated `libtensorflowlite_jni.so` (etc.) inside a **new APK** you build; use *Download APK & open installer* to install that APK from a URL **you trust**.
+## Updating artifacts
 
-Regenerate the bundled XOR model: `python3 tools/export_xor_tflite.py` (after `pip install tensorflow`).
+- **Model / graph:** download **`https://…/*.tflite`** or use **Install suggested .tflite** when your assistant reply includes one.
+- **Native TensorFlow Lite:** ship updated JNI in a **new APK** you build; use **Download APK** to install from a URL you trust.
+
+Regenerate the bundled XOR model: `python3 tools/export_xor_tflite.py` (with `pip install tensorflow` on a dev machine).
 
 ## TensorFlow Lite (Gradle)
 

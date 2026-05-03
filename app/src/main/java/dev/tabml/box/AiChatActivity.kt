@@ -107,6 +107,12 @@ class AiChatActivity : AppCompatActivity() {
             Toast.makeText(this, R.string.ai_need_network, Toast.LENGTH_LONG).show()
             return
         }
+        val base = Prefs.aiBaseUrl(this).trim()
+        if (base.isEmpty() || !base.startsWith("https://")) {
+            Toast.makeText(this, R.string.assistant_need_endpoint, Toast.LENGTH_LONG).show()
+            return
+        }
+
         val key = AiSecurePrefs.apiKey(this)
         if (key.isBlank()) {
             Toast.makeText(this, R.string.ai_no_key_toast, Toast.LENGTH_SHORT).show()
@@ -140,7 +146,7 @@ class AiChatActivity : AppCompatActivity() {
 
         lifecycleScope.launch(Dispatchers.IO) {
             val result = runCatching {
-                val client = OpenAiChatClient(
+                val client = AssistantChatClient(
                     Prefs.aiBaseUrl(this@AiChatActivity),
                     key,
                     Prefs.aiModel(this@AiChatActivity),

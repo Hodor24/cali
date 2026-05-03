@@ -9,8 +9,8 @@ import okhttp3.RequestBody.Companion.toRequestBody
 import java.io.IOException
 import java.util.concurrent.TimeUnit
 
-/** Minimal OpenAI-compatible `POST /v1/chat/completions` client. */
-class OpenAiChatClient(
+/** HTTPS client for `POST …/v1/chat/completions` style JSON APIs (messages in, reply text out). */
+class AssistantChatClient(
     private val baseUrl: String,
     private val apiKey: String,
     private val model: String,
@@ -24,7 +24,7 @@ class OpenAiChatClient(
 
     private val jsonMedia = "application/json; charset=utf-8".toMediaType()
 
-    /** [messages] as pairs of OpenAI role to content (`system`, `user`, `assistant`). */
+    /** Roles: `system`, `user`, `assistant` — content strings. */
     fun chat(messages: List<Pair<String, String>>): String {
         val url = "${baseUrl.trimEnd('/')}/v1/chat/completions"
         val arr = JSONArray()
@@ -38,7 +38,7 @@ class OpenAiChatClient(
         val body = JSONObject()
             .put("model", model)
             .put("messages", arr)
-        val req = Request.Builder()
+        val reqBuilder = Request.Builder()
             .url(url)
             .addHeader("Content-Type", "application/json")
             .apply {
@@ -47,8 +47,7 @@ class OpenAiChatClient(
                 }
             }
             .post(body.toString().toRequestBody(jsonMedia))
-            .build()
-        client.newCall(req).execute().use { resp ->
+        client.newCall(reqBuilder.build()).execute().use { resp ->
             val responseBody = resp.body?.string().orEmpty()
             if (!resp.isSuccessful) {
                 throw IOException("HTTP ${resp.code}: $responseBody")

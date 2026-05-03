@@ -41,11 +41,10 @@ object Prefs {
         }
     }
 
-    /** OpenAI-compatible API root, e.g. https://api.openai.com or your local https proxy. */
+    /** HTTPS origin you control, e.g. https://assistant.example.com (no trailing path). */
     fun aiBaseUrl(context: Context): String =
         context.getSharedPreferences(NAME, Context.MODE_PRIVATE)
-            .getString(KEY_AI_BASE_URL, "https://api.openai.com")
-            ?: "https://api.openai.com"
+            .getString(KEY_AI_BASE_URL, "") ?: ""
 
     fun setAiBaseUrl(context: Context, value: String) {
         context.getSharedPreferences(NAME, Context.MODE_PRIVATE).edit {
@@ -55,7 +54,7 @@ object Prefs {
 
     fun aiModel(context: Context): String =
         context.getSharedPreferences(NAME, Context.MODE_PRIVATE)
-            .getString(KEY_AI_MODEL, "gpt-4o-mini") ?: "gpt-4o-mini"
+            .getString(KEY_AI_MODEL, "model") ?: "model"
 
     fun setAiModel(context: Context, value: String) {
         context.getSharedPreferences(NAME, Context.MODE_PRIVATE).edit {
