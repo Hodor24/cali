@@ -42,6 +42,8 @@ Cali is already a “real” client: it sends **OpenAI-compatible** chat to **yo
 
 Other stacks work the same way if they implement **`POST {baseUrl}/v1/chat/completions`** (vLLM, LiteLLM, OpenAI, etc.). **Debug** APKs also allow `http://` base URLs (e.g. `http://10.0.0.5:11434`) if the tablet can reach the Mac on LAN—**release** builds do not.
 
+If you see **HTTP 403** with an **ngrok** URL: install the latest app build (adds `ngrok-skip-browser-warning` and a normal browser `User-Agent` for ngrok hosts). If it persists, open the same HTTPS URL once in **Chrome on the tablet**, tap **Visit site** if ngrok shows a warning, then try Cali again. In the ngrok local inspector ([http://127.0.0.1:4040](http://127.0.0.1:4040)) confirm requests reach **localhost:11434** and read the response body.
+
 ## Updating artifacts
 
 - **Model / graph:** download **`https://…/*.tflite`** or use **Install suggested .tflite** when your assistant reply includes one.

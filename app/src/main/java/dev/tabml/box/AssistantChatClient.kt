@@ -34,6 +34,21 @@ class AssistantChatClient(
 
     private val jsonMedia = "application/json; charset=utf-8".toMediaType()
 
+    /**
+     * ngrok free endpoints often return **403** to non-browser clients until this header is sent.
+     * See ngrok docs / community notes on skipping the browser warning for APIs.
+     */
+    private fun Request.Builder.applyNgrokFreeTierHeaders(url: String): Request.Builder {
+        if (!url.contains("ngrok", ignoreCase = true)) return this
+        addHeader("ngrok-skip-browser-warning", "true")
+        // Default OkHttp User-Agent is sometimes blocked at the edge; mimic a normal client.
+        addHeader(
+            "User-Agent",
+            "Mozilla/5.0 (Linux; Android 14; Mobile) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Mobile Safari/537.36 TabMLBox",
+        )
+        return this
+    }
+
     private fun buildRequestBody(messages: List<Pair<String, String>>, stream: Boolean): RequestBody {
         val arr = JSONArray()
         for ((role, content) in messages) {
@@ -56,6 +71,7 @@ class AssistantChatClient(
         val url = "${baseUrl.trimEnd('/')}/v1/chat/completions"
         val reqBuilder = Request.Builder()
             .url(url)
+            .applyNgrokFreeTierHeaders(url)
             .addHeader("Content-Type", "application/json")
             .addHeader("Accept", "application/json, text/event-stream")
             .apply {
@@ -214,6 +230,7 @@ class AssistantChatClient(
         val url = "${baseUrl.trimEnd('/')}/v1/models"
         val req = Request.Builder()
             .url(url)
+            .applyNgrokFreeTierHeaders(url)
             .get()
             .apply {
                 if (apiKey.isNotBlank()) {
