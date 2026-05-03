@@ -35,6 +35,7 @@ import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
 import org.json.JSONObject
 import java.io.IOException
+import android.os.SystemClock
 
 class AiChatActivity : AppCompatActivity() {
 
@@ -46,6 +47,9 @@ class AiChatActivity : AppCompatActivity() {
     private val adapter = ChatAdapter()
     private var pendingTfliteUrl: String? = null
     private var voiceAutoSend = false
+    /** Blocks listen-after → STT → auto-send loops on the same phrase (echo / noise). */
+    private var lastVoiceAutoSendElapsedMs = 0L
+    private var lastVoiceAutoSendText: String? = null
     /** Active send/generate job (on-device or remote); used to cancel on-device generation. */
     private var sendJob: Job? = null
 
@@ -131,10 +135,20 @@ class AiChatActivity : AppCompatActivity() {
     private fun initChatAfterPin() {
         caliVoice = CaliVoice(
             activity = this,
-            onListenResult = { text ->
+            onListenResult = listen@{ text ->
                 binding.inputMessage.setText(text)
                 binding.inputMessage.setSelection(text.length)
                 if (voiceAutoSend && text.isNotBlank()) {
+                    val now = SystemClock.elapsedRealtime()
+                    val tnorm = text.trim()
+                    if (tnorm == lastVoiceAutoSendText?.trim() &&
+                        now - lastVoiceAutoSendElapsedMs < 4_000L
+                    ) {
+                        voiceAutoSend = false
+                        return@listen
+                    }
+                    lastVoiceAutoSendText = tnorm
+                    lastVoiceAutoSendElapsedMs = now
                     voiceAutoSend = false
                     sendMessage()
                 }
@@ -142,7 +156,7 @@ class AiChatActivity : AppCompatActivity() {
             onListenError = {
                 Toast.makeText(this@AiChatActivity, R.string.cali_voice_unavailable, Toast.LENGTH_SHORT).show()
             },
-            onSpeakDone = { scheduleListenAfterIfNeeded() },
+            onSpeakDone = { scheduleListenAfterIfNeeded(delayMs = 1_400L) },
             onSpeakingChanged = { refreshStopSpeakingMenuItem() },
         )
         caliVoice.init()
@@ -575,6 +589,14 @@ class AiChatActivity : AppCompatActivity() {
         binding.textConnectionBanner.visibility = View.GONE
     }
 
+    private fun ngrokUpstreamHintIfNeeded(displayedError: String): String {
+        val d = displayedError.lowercase()
+        if (!d.contains("ngrok") && !d.contains("8765") && !d.contains("err_ngrok")) {
+            return ""
+        }
+        return "\n\n" + getString(R.string.ai_error_ngrok_upstream_hint)
+    }
+
     private fun refreshRetryShareMenu(sending: Boolean) {
         if (isDestroyed || isFinishing) return
         val hasUser = transcript.any { it.speaker == ChatSpeaker.User }
@@ -852,16 +874,16 @@ class AiChatActivity : AppCompatActivity() {
         }
     }
 
-    private fun scheduleListenAfterIfNeeded() {
+    private fun scheduleListenAfterIfNeeded(delayMs: Long = 550L) {
         if (!Prefs.caliListenAfter(this)) return
         binding.root.postDelayed(
             {
                 if (isDestroyed || isFinishing) return@postDelayed
-                if (binding.btnSend.isEnabled) {
-                    ensureMicThenListen(autoSend = true)
-                }
+                if (!binding.btnSend.isEnabled) return@postDelayed
+                if (caliVoice.isSpeaking()) return@postDelayed
+                ensureMicThenListen(autoSend = true)
             },
-            450,
+            delayMs,
         )
     }
 
@@ -1108,7 +1130,8 @@ class AiChatActivity : AppCompatActivity() {
             nvqMode = Prefs.nvqAssessorMode(this),
             ok = false,
         )
-        val err = getString(R.string.ai_error, e.message ?: e.toString())
+        val baseErr = getString(R.string.ai_error, e.message ?: e.toString())
+        val err = baseErr + ngrokUpstreamHintIfNeeded(baseErr)
         if (replaceStreamingPlaceholder &&
             transcript.isNotEmpty() &&
             transcript.last().speaker == ChatSpeaker.Assistant
