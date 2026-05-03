@@ -21,7 +21,6 @@ import org.vosk.Model
 import org.vosk.Recognizer
 import org.vosk.android.RecognitionListener
 import org.vosk.android.SpeechService
-import java.util.Locale
 import java.util.concurrent.atomic.AtomicBoolean
 
 /**
@@ -202,8 +201,8 @@ class CaliWakeService : Service() {
     }
 
     private fun containsWakeKeyword(spoken: String): Boolean {
-        val t = spoken.lowercase(Locale.US)
-        return WAKE_SUBSTRINGS.any { t.contains(it) }
+        if (HEY_CALI.containsMatchIn(spoken)) return true
+        return CALI_AS_WORD.containsMatchIn(spoken)
     }
 
     private fun onWakeDetected() {
@@ -281,12 +280,15 @@ class CaliWakeService : Service() {
 
         /**
          * Constrained phrases for the small US English Vosk model (with `[unk]` filler).
-         * If this fails at runtime, we fall back to an unconstrained recognizer + substring checks.
+         * If this fails at runtime, we fall back to an unconstrained recognizer and phrase checks below.
          */
-        private const val WAKE_GRAMMAR =
-            """["cali", "kali", "callie", "kelly", "hey cali", "hey kelly", "[unk]"]"""
+        private const val WAKE_GRAMMAR = """["cali", "hey cali", "[unk]"]"""
 
-        private val WAKE_SUBSTRINGS = listOf("cali", "kali", "callie", "kelly")
+        /** “Hey Cali” / “hey, Cali” before a non-letter or end. */
+        private val HEY_CALI = Regex("hey\\s*,?\\s*cali(?!\\p{L})", RegexOption.IGNORE_CASE)
+
+        /** “Cali” as its own token (avoids “California”, etc.). */
+        private val CALI_AS_WORD = Regex("(?<!\\p{L})cali(?!\\p{L})", RegexOption.IGNORE_CASE)
 
         fun start(context: Context) {
             val i = Intent(context, CaliWakeService::class.java)

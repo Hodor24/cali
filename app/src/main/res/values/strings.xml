@@ -91,7 +91,7 @@
     <string name="ai_help_title">Using the assistant</string>
     <string name="ai_how_to_connect">How to connect</string>
     <string name="ai_open_settings_short">Your server</string>
-    <string name="ai_help_body">You can use Cali in two ways.\n\n1) On this tablet: turn on “Run LLM on this tablet” in settings, download the starter Llama 3.2 GGUF (large download; needs “Allow HTTPS downloads” once), and pick the matching “Chat template” for any model you replace the file with.\n\n2) Remote server: leave that off and set “Assistant base URL” to an OpenAI-compatible POST /v1/chat/completions service (Ollama, vLLM, LiteLLM, etc.). Set “Model name” to the id your server expects. For streaming tokens in the chat bubble, your server should honour `stream: true` (SSE or NDJSON), otherwise Cali falls back to a normal JSON reply.\n\n“Bearer token” is optional for remote mode if your server does not check Authorization.\n\nRelease builds require https:// for remote URLs. Debug builds also allow http:// for local development.\n\nOptional “Cali” wake word: on the main Tab ML Box screen, download the small English Vosk model (same as offline speech), then turn on “Listen for wake word”. Cali opens chat with the mic when it hears “Cali” or similar. Listens in the foreground with a notification.\n\nThis app cannot edit Gradle files on the device. It can suggest dependency lines for you to paste in Android Studio. It can suggest installing a .tflite file only when you or your server provides a real https:// link in the agreed format.</string>
+    <string name="ai_help_body">You can use Cali in two ways.\n\n1) On this tablet: turn on “Run LLM on this tablet” in settings, download the starter Llama 3.2 GGUF (large download; needs “Allow HTTPS downloads” once), and pick the matching “Chat template” for any model you replace the file with.\n\n2) Remote server: leave that off and set “Assistant base URL” to an OpenAI-compatible POST /v1/chat/completions service (Ollama, vLLM, LiteLLM, etc.). Set “Model name” to the id your server expects. For streaming tokens in the chat bubble, your server should honour `stream: true` (SSE or NDJSON), otherwise Cali falls back to a normal JSON reply.\n\n“Bearer token” is optional for remote mode if your server does not check Authorization.\n\nRelease builds require https:// for remote URLs. Debug builds also allow http:// for local development.\n\nOptional wake: on the main Tab ML Box screen, download the small English Vosk model (same as offline speech), then turn on “Listen for wake word”. Say “Cali” or “hey Cali” to open chat with the mic (tuned so “California” does not trigger). Listens in the foreground with a notification.\n\nThis app cannot edit Gradle files on the device. It can suggest dependency lines for you to paste in Android Studio. It can suggest installing a .tflite file only when you or your server provides a real https:// link in the agreed format.</string>
     <string name="ai_error">Assistant error: %1$s</string>
     <string name="ai_install_done">Installed model (%1$d bytes). Run TensorFlow Lite on the main screen to test.</string>
     <string name="ai_no_suggested_url">No suggested .tflite in the last reply.</string>
@@ -146,7 +146,7 @@
     <string name="cali_subject_note">Change this anytime — it teaches me (and your server) what you care about for this session.</string>
     <string name="cali_speak_replies">Speak replies</string>
     <string name="cali_listen_after">Listen after I speak</string>
-    <string name="cali_voice_note">Tap the mic for voice (push-to-talk). For hands-free open, download the English Vosk model and turn on “Listen for wake word” on the main screen.</string>
+    <string name="cali_voice_note">Tap the mic for voice (push-to-talk). Hands-free: install the English Vosk model, turn on “Listen for wake word” on the main screen, then say “Cali” or “hey Cali”.</string>
     <string name="cali_mic_content_desc">Speak</string>
     <string name="cali_stop_speaking">Stop speaking</string>
     <string name="cali_options_menu">Learning &amp; NVQ options</string>
@@ -166,7 +166,7 @@
     <string name="cali_opened_nav">Opening directions…</string>
     <string name="cali_opened_link">Opening link…</string>
     <string name="cali_wake_card_title">“Cali” wake word (Vosk)</string>
-    <string name="cali_wake_card_body">On-device wake uses the same small English Vosk model as offline speech. Download it once, grant microphone + notification permission (Android 13+), then turn on listening below. A persistent notification shows while the mic is active.</string>
+    <string name="cali_wake_card_body">Say “Cali” or “hey Cali” to open assistant chat (not words like “California”). Uses the same small English Vosk model as offline speech—download once, grant microphone + notification (Android 13+), then turn on listening below. A persistent notification shows while the mic is active.</string>
     <string name="cali_wake_enable">Listen for wake word</string>
     <string name="cali_wake_status_need_model">Download the English model first (“Allow HTTPS downloads” on).</string>
     <string name="cali_wake_status_ready">Model ready — turn on listening when you want wake.</string>
