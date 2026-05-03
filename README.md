@@ -44,10 +44,11 @@ Other stacks work the same way if they implement **`POST {baseUrl}/v1/chat/compl
 
 If you see **HTTP 403** with an **ngrok** URL, the app already sends `ngrok-skip-browser-warning` and browser-like headers for ngrok hosts. A **403 with an empty body** often means the **public ngrok URL is stale** (old tunnel), **ngrok is not running**, or **ngrok’s edge** rejected the request before it reached your Mac — not an Ollama error. Checklist:
 
-1. On the Mac, `curl -sS http://127.0.0.1:11434/v1/tags` (or `/v1/models`) should return JSON while Ollama is running.
+1. On the Mac, `curl -sS http://127.0.0.1:11434/v1/models` should return JSON while Ollama is running.
 2. Run **`ngrok http 11434`** (or `127.0.0.1:11434`) and set the app’s **Assistant base URL** to the **current** `https://…ngrok…` origin from that session (each new ngrok run can change the hostname on free tier).
 3. On the tablet, open that **same https origin** once in **Chrome**, tap **Visit site** if an interstitial appears, then try Cali again.
-4. On the Mac, open [http://127.0.0.1:4040](http://127.0.0.1:4040): if requests from the tablet **never appear**, the tunnel or URL is wrong; if they appear with 403, inspect response headers.
+4. On the Mac, open the ngrok inspector (usually [http://127.0.0.1:4040](http://127.0.0.1:4040); if that port was busy, ngrok may use **4041** — check the line *starting web service* in the terminal). If requests from the tablet **never appear**, the tunnel or URL is wrong; if they appear with 403, inspect response headers.
+5. **Static / reserved free hostname (e.g. always the same `*.ngrok-free.dev`):** only **one** live tunnel may use it. If another terminal, machine, or old `ngrok` process still holds that endpoint, you can see **`ERR_NGROK_334`** (“endpoint is already online”) when starting a new tunnel, and clients may see **403** to the public URL while traffic never reaches your Mac. Fix: stop **all** other ngrok agents using that hostname (`pkill ngrok` on machines you control, or stop the tunnel in the [ngrok dashboard](https://dashboard.ngrok.com)), then start **`ngrok http 11434`** again. Optionally switch to a random subdomain by not pinning a domain in `ngrok.yml`.
 
 Alternative tunnel (no ngrok): **`cloudflared tunnel --url http://127.0.0.1:11434`** — use the printed `https://…trycloudflare.com` origin as the base URL. **Debug** APKs can also use **`http://<laptop-LAN-ip>:11434`** if the tablet can reach the Mac on Wi‑Fi.
 
